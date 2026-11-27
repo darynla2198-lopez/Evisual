@@ -1,7 +1,16 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.4",
+      "d": "2026-11-27",
+      "n": [
+        "Corregido: los folios con letra de máquina de escribir salían vacíos. Ahora las letras se incrustan completas",
+        "Nueva opción de ceros a la izquierda: completar a 3–7 dígitos o anteponer siempre 0, 00 o 000 (ej. 0005000)",
+        "Formatos de folio más claros: número, número de total, número y en letras, o solo en letras"
+      ]
+    },
     {
       "v": "1.0.3",
       "d": "2026-11-27",
