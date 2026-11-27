@@ -1,7 +1,15 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.5",
+      "d": "2026-11-27",
+      "n": [
+        "El panel de opciones de la derecha se puede ocultar y volver a mostrar con un botón; Evisual recuerda tu preferencia",
+        "Al ocultarlo, el documento aprovecha todo el ancho"
+      ]
+    },
     {
       "v": "1.0.4",
       "d": "2026-11-27",

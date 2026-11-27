@@ -38,7 +38,7 @@ header{display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px 
 .ib.pri{background:var(--ink);color:var(--bg)}
 .ib .dot{position:absolute;top:9px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px var(--bg)}
 button:focus-visible,label:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-main{display:grid;grid-template-columns:80px 172px minmax(0,1fr) 330px;min-height:0}
+main{display:grid;grid-template-columns:80px 172px minmax(0,1fr) calc(330px*var(--pk,1));min-height:0}
 .rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;border-right:1px solid var(--line);overflow:auto}
 .tl{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 5px;line-height:1.15;text-align:center;border:0;border-radius:12px;background:none;color:var(--mute);font:500 13px Inter,sans-serif;cursor:pointer;flex:none}
 .tl:hover{color:var(--ink);background:var(--chrome)}
@@ -280,9 +280,11 @@ textarea{font:16px/1.4 Inter,sans-serif;padding:10px 12px;border:1px solid var(-
 .legend i{width:14px;height:14px;border-radius:4px}
 .upl{display:block;width:100%;height:130px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
 body.th-off .thumbs{display:none!important}
-body.th-off main{grid-template-columns:80px minmax(0,1fr) 330px}
-@media(max-width:1180px){body.th-on main{grid-template-columns:80px 150px minmax(0,1fr) 300px}body.th-on .thumbs{display:flex}body.th-off main{grid-template-columns:80px minmax(0,1fr) 310px}}
-@media(max-width:1180px){main{grid-template-columns:80px minmax(0,1fr) 310px}.thumbs{display:none}}
+body.pn-off{--pk:0}body.pn-off .panel{display:none!important}
+#pnT{margin-left:8px}
+body.th-off main{grid-template-columns:80px minmax(0,1fr) calc(330px*var(--pk,1))}
+@media(max-width:1180px){body.th-on main{grid-template-columns:80px 150px minmax(0,1fr) calc(300px*var(--pk,1))}body.th-on .thumbs{display:flex}body.th-off main{grid-template-columns:80px minmax(0,1fr) calc(310px*var(--pk,1))}}
+@media(max-width:1180px){main{grid-template-columns:80px minmax(0,1fr) calc(310px*var(--pk,1))}.thumbs{display:none}}
 @media(max-width:760px){
 body.th-on main,body.th-off main{grid-template-columns:minmax(0,1fr)}
 body.th-on .thumbs{display:none}
@@ -336,6 +338,7 @@ body[data-tool=view] .panel{display:none}
       <button class="ib" id="split" title="Ver dos documentos a la vez"><svg class="i" viewBox="0 0 24 24"><path d="M3 5h18v14H3zM12 5v14"/></svg><span class="t">Dividir</span></button>
       <span class="hint" id="hint"></span>
       <span class="priv" title="Evisual no sube tus archivos a ningún servidor"><svg class="i" viewBox="0 0 24 24"><path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 017 0v3"/></svg>Procesado en tu equipo, sin subir archivos</span>
+      <button class="ib hide-s on" id="pnT" title="Ocultar panel de opciones" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><path d="M3 4h18v16H3zM15 4v16M17 8h2M17 11h2M17 14h2"/></svg></button>
     </div>
     <div class="panes" id="panes">
       <div class="viewer" id="viewer"></div>
@@ -458,7 +461,7 @@ const TOOLS=[
  ['protect','Proteger','M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM9.5 12l2 2 3.5-4','Contraseña, permisos y ocultar datos'],
  ['layers','Capas','M12 3l9 5-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5','Capas, consolidar y optimizar']];
 $('#rail').innerHTML=TOOLS.map(t=>`<button class="tl" data-t="${t[0]}" title="${t[3]}">${ico(t[2])}${t[1]}</button>`).join('');
-$('#rail').addEventListener('click',e=>{const b=e.target.closest('.tl');b&&setTool(b.dataset.t)});
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('.tl');if(!b)return;setTool(b.dataset.t);if(document.body.classList.contains('pn-off')&&b.dataset.t!=='view'&&!setPanel.told){setPanel.told=1;toast('Las opciones están en el panel derecho, que está oculto. Muéstralo con el botón de la derecha de la barra.')}});
 
 function bytesOf(c,type='image/png',q){const b=atob(c.toDataURL(type,q).split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
 function rnd(s){return()=>(s=s*16807%2147483647)/2147483647}
@@ -825,7 +828,7 @@ async function drawTextBlock(d,pg,x,y){const {f,sk}=await famFont(d,TXT.fam,TXT.
 $('#hGuide').onclick=()=>openGuide();
 const GUIDE=[
  ['start','Primeros pasos','M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z','Abrir, guardar y moverte por tus documentos.',
-  ['Pulsa <b>Abrir</b> o arrastra uno o varios PDF a la ventana. Cada uno se abre en su propia pestaña.','Usa la barra izquierda para elegir la herramienta; el panel de la derecha muestra sus opciones.','El botón de miniaturas (arriba a la izquierda del documento) muestra u oculta las páginas.','<b>Deshacer</b> revierte el último cambio. <b>Guardar</b> escribe sobre el mismo archivo; Mayús + clic guarda una copia nueva.','<b>Dividir</b> muestra dos documentos lado a lado para compararlos.'],
+  ['Pulsa <b>Abrir</b> o arrastra uno o varios PDF a la ventana. Cada uno se abre en su propia pestaña.','Usa la barra izquierda para elegir la herramienta; el panel de la derecha muestra sus opciones.','Los botones de los extremos de la barra del documento muestran u ocultan las miniaturas (izquierda) y el panel de opciones (derecha).','<b>Deshacer</b> revierte el último cambio. <b>Guardar</b> escribe sobre el mismo archivo; Mayús + clic guarda una copia nueva.','<b>Dividir</b> muestra dos documentos lado a lado para compararlos.'],
   'Tus documentos nunca salen de tu equipo: todo se procesa en local.'],
  ['text','Editar texto','M5 6V4h14v2M12 4v16M9 20h6','Corrige texto existente o agrega texto nuevo.',
   ['Elige <b>Editar</b> y, en el panel, <b>Editar existente</b>.','Antes de tocar la hoja, elige letra, tamaño, color y estilo (negrita, cursiva, subrayado, centrado).','Haz clic en la línea que quieres cambiar, escribe y pulsa <kbd>Enter</kbd>. <kbd>Esc</kbd> cancela.','Para texto nuevo, cambia a <b>Agregar texto</b>, escríbelo en el panel y haz clic donde quieras colocarlo.'],
@@ -1245,14 +1248,17 @@ async function applyRedact(){const list=S.red.slice(),pages=[...new Set(list.map
 function setThumbs(on,save){document.body.classList.toggle('th-on',on);document.body.classList.toggle('th-off',!on);const b=$('#thT');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);b.title=on?'Ocultar miniaturas':'Mostrar miniaturas';if(save)try{localStorage.setItem('evisual-thumbs',on?'1':'0')}catch(e){}}
 {let v=null;try{v=localStorage.getItem('evisual-thumbs')}catch(e){}setThumbs(v===null?innerWidth>1180:v==='1')}
 $('#thT').onclick=()=>setThumbs(!document.body.classList.contains('th-on'),true);
+function setPanel(on,save){document.body.classList.toggle('pn-off',!on);const b=$('#pnT');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);b.title=on?'Ocultar panel de opciones':'Mostrar panel de opciones';if(save)try{localStorage.setItem('evisual-panel',on?'1':'0')}catch(e){}}
+{let v=null;try{v=localStorage.getItem('evisual-panel')}catch(e){}setPanel(v!=='0')}
+$('#pnT').onclick=()=>setPanel(document.body.classList.contains('pn-off'),true);
 
 /* ---------- modals: updates, print, share ---------- */
 const openM=id=>{$('#'+id).classList.add('on');$('#'+id+' [data-close]').focus()};
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on')}));
 const NAT=window.evisualNative||null;
 const natHandle=(path,name)=>({name,nativePath:path,createWritable:async()=>{let blob;return{write:async b=>{blob=b},close:async()=>NAT.writeFile(path,new Uint8Array(await blob.arrayBuffer()))}}});
-const APP_V=(NAT&&NAT.version)||'1.0.4',UPURL='version.json';
-const NOTES=[{v:'1.0.4',d:'2026-11-27',n:['Corregido: los folios con letra de máquina de escribir salían vacíos. Ahora las letras se incrustan completas', 'Nueva opción de ceros a la izquierda: completar a 3–7 dígitos o anteponer siempre 0, 00 o 000 (ej. 0005000)', 'Formatos de folio más claros: número, número de total, número y en letras, o solo en letras']},{v:'1.0.3',d:'2026-11-27',n:['Guía rápida integrada: botón Ayuda y tecla F1, con pasos para cada herramienta', 'Se quitaron los documentos de ejemplo de la app', 'La vista dividida abre otra pestaña o una copia del documento actual']},{v:'1.0.2',d:'2026-11-27',n:['Editar texto ya no deja fondo blanco: el texto original se elimina del PDF', 'Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado', 'Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display', 'Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante', 'Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello']},{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
+const APP_V=(NAT&&NAT.version)||'1.0.5',UPURL='version.json';
+const NOTES=[{v:'1.0.5',d:'2026-11-27',n:['El panel de opciones de la derecha se puede ocultar y volver a mostrar con un botón; Evisual recuerda tu preferencia', 'Al ocultarlo, el documento aprovecha todo el ancho']},{v:'1.0.4',d:'2026-11-27',n:['Corregido: los folios con letra de máquina de escribir salían vacíos. Ahora las letras se incrustan completas', 'Nueva opción de ceros a la izquierda: completar a 3–7 dígitos o anteponer siempre 0, 00 o 000 (ej. 0005000)', 'Formatos de folio más claros: número, número de total, número y en letras, o solo en letras']},{v:'1.0.3',d:'2026-11-27',n:['Guía rápida integrada: botón Ayuda y tecla F1, con pasos para cada herramienta', 'Se quitaron los documentos de ejemplo de la app', 'La vista dividida abre otra pestaña o una copia del documento actual']},{v:'1.0.2',d:'2026-11-27',n:['Editar texto ya no deja fondo blanco: el texto original se elimina del PDF', 'Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado', 'Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display', 'Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante', 'Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello']},{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
 const UP={st:'idle',last:null,remote:null,reg:null};
 const tm=d=>d?d.toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'todavía no';
 const vnum=v=>String(v||'0').split('.').map(Number).reduce((a,x)=>a*1000+(x||0),0);
