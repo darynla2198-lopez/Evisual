@@ -1,6 +1,7 @@
 # Crea el instalador de Windows y lo publica en GitHub Releases.
 # Para lanzar una versión: sube la versión en package.json, sw.js y version.json,
-# y crea una etiqueta, por ejemplo: git tag v1.0.1 && git push origin v1.0.1
+# y crea una etiqueta (git tag v1.0.1 && git push origin v1.0.1),
+# o pulsa "Run workflow" en la pestaña Actions y la etiqueta se crea sola.
 name: Instalador de Windows
 
 on:
@@ -20,6 +21,14 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Crear la etiqueta de la versión si se lanzó a mano
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if ! git ls-remote --exit-code --tags origin "refs/tags/v$V" >/dev/null; then
+            git tag "v$V" && git push origin "v$V"
+          fi
       - run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

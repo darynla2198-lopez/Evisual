@@ -31,7 +31,7 @@ Con GitHub Pages activado, Evisual está en `https://darynla2198-lopez.github.io
 ## Publicar una actualización
 
 1. Sube el número de versión en `package.json`, en `VERSION` de `sw.js` y en `version.json` (con sus notas).
-2. Crea una etiqueta con esa versión, por ejemplo `git tag v1.0.1` y `git push origin v1.0.1`.
+2. En la pestaña **Actions** de GitHub, abre "Instalador de Windows" y pulsa **Run workflow** (o crea la etiqueta `v1.0.1` tú misma).
 3. GitHub Actions construye el instalador y lo publica en Releases. Las apps instaladas lo detectan solas.
 
 ## Archivos
