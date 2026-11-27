@@ -174,6 +174,21 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);margin:0;fle
 .pop button[data-v]{display:block}
 [hidden]{display:none!important}
 #prOut{display:none}
+.home{display:none;position:fixed;left:0;right:0;top:104px;bottom:0;z-index:15;background:var(--desk);align-items:center;justify-content:center;padding:24px;overflow:auto}
+body.empty .home{display:flex}
+body.empty #save,body.empty #print,body.empty #share,body.empty #undo{opacity:.4;pointer-events:none}
+.hcard{width:min(560px,100%);background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:40px 36px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.08)}
+.hcard .hic{width:64px;height:64px;margin:0 auto 18px;border-radius:16px;background:var(--accs);color:var(--acc);display:grid;place-items:center}
+.hcard .hic svg{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hcard h1{font:700 28px/1.2 "Inter Tight",Inter,sans-serif;margin:0 0 8px}
+.hcard p{color:var(--mute);margin:0 0 24px}
+.hdrop{border:2px dashed var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+.hdrop .btn{min-width:200px}
+.hdrop small{display:block;color:var(--mute);margin-top:10px}
+.hkeys{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;color:var(--mute);font-size:13px}
+.hkeys kbd{font:600 12px Inter,sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;margin-right:4px;color:var(--ink)}
+.hsam{margin-top:20px;font-size:13px;color:var(--mute)}
+.hsam button{background:none;border:0;color:var(--acc);font:600 13px Inter,sans-serif;cursor:pointer;padding:2px 4px}
 #shGrid{grid-template-columns:repeat(2,1fr)}
 @media print{body{display:block!important;background:#fff!important}body>*:not(#prOut){display:none!important}#prOut{display:block!important}.prp{display:flex;align-items:center;justify-content:center;overflow:hidden;break-after:page;page-break-after:always}.prp:last-child{break-after:auto;page-break-after:auto}.prp img{display:block}}
 .tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 10px 0;background:var(--chrome);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
@@ -379,6 +394,14 @@ body[data-tool=view] .panel{display:none}
 </div></div>
 
 <div class="pop" id="thPop" role="menu"><button data-v="system">Automático<small>Se adapta a la configuración de Windows</small></button><button data-v="light">Claro</button><button data-v="dark">Oscuro</button></div>
+<div class="home" id="home" aria-label="Inicio"><div class="hcard">
+  <div class="hic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg></div>
+  <h1>Te damos la bienvenida a Evisual</h1>
+  <p>Abre un PDF para empezar a editar, firmar, foliar o imprimir.</p>
+  <div class="hdrop"><label class="btn pri" for="fOpen" tabindex="0">Abrir PDF</label><small>o arrastra uno o varios archivos a esta ventana</small></div>
+  <div class="hkeys"><span><kbd>Ctrl</kbd><kbd>O</kbd>Abrir</span><span><kbd>Ctrl</kbd><kbd>S</kbd>Guardar</span><span><kbd>Ctrl</kbd><kbd>P</kbd>Imprimir</span></div>
+  <div class="hsam">¿Quieres probar primero? <button id="hPlan">Abrir un plano de ejemplo</button>·<button id="hDoc">un contrato de ejemplo</button></div>
+</div></div>
 <div class="busy" id="busy"></div>
 <div id="prOut" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status"></div>
@@ -516,12 +539,13 @@ async function sampleDoc(){
 }
 const TABS=[];let act=-1;
 function snap(){const t=TABS[act];if(!t||!S.bytes)return;Object.assign(t,{handle:S.handle,dirty:S.dirty,bytes:S.bytes,name:S.name,hist:S.hist,tags:S.tags,srcs:S.srcs,merged:S.merged,zoom:S.zoom,fit:S.fit,st:viewer.scrollTop,cur:S.cur})}
-function drawTabs(){const b=$('#tabs');if(!b)return;b.innerHTML=TABS.map((t,i)=>{const on=i===act,nm=on?S.name:t.name,mod=on?S.dirty:t.dirty;return`<div class="tab${on?' on':''}" role="tab" aria-selected="${on}" tabindex="0" data-i="${i}" title="${esc(nm)}">${ico(TOOLS[0][2])}<span>${esc(nm)}</span>${mod?'<i class="m" title="Tiene cambios"></i>':''}${TABS.length>1?`<button class="tx" data-x="${i}" title="Cerrar pestaña" aria-label="Cerrar ${esc(nm)}">✕</button>`:''}</div>`}).join('')+'<label class="tadd" for="fOpen" tabindex="0" title="Abrir otro PDF en una pestaña nueva">+</label>';
+function drawTabs(){const b=$('#tabs');if(!b)return;b.innerHTML=TABS.map((t,i)=>{const on=i===act,nm=on?S.name:t.name,mod=on?S.dirty:t.dirty;return`<div class="tab${on?' on':''}" role="tab" aria-selected="${on}" tabindex="0" data-i="${i}" title="${esc(nm)}">${ico(TOOLS[0][2])}<span>${esc(nm)}</span>${mod?'<i class="m" title="Tiene cambios"></i>':''}${TABS.length?`<button class="tx" data-x="${i}" title="Cerrar pestaña" aria-label="Cerrar ${esc(nm)}">✕</button>`:''}</div>`}).join('')+'<label class="tadd" for="fOpen" tabindex="0" title="Abrir otro PDF en una pestaña nueva">+</label>';
  $('.tab.on',b)?.scrollIntoView({block:'nearest',inline:'nearest'});
  $('#b2s').innerHTML='<option value="">Cambiar…</option>'+TABS.map((t,i)=>i===act?'':`<option value="tab:${i}">Pestaña: ${esc(t.name)}</option>`).join('')+'<option value="same">Copia del documento actual</option><option value="plan">Plano de ejemplo</option><option value="doc">Contrato de ejemplo</option>'}
+function goHome(){if(S.doc){S.doc.destroy();S.doc=null}Object.assign(S,{bytes:null,name:'',hist:[],dirty:false,handle:null,tags:[],srcs:[],merged:[]});S.sel.clear();viewer.innerHTML='';thumbs.innerHTML='';panel.innerHTML='';document.body.classList.add('empty');$('#dName').textContent='Evisual';$('#dMeta').textContent='Ningún documento abierto';$('#undo').disabled=true;drawTabs()}
 async function switchTab(i){if(busy||i===act||!TABS[i])return;snap();act=i;const t=TABS[i];Object.assign(S,{handle:t.handle,dirty:t.dirty,hist:t.hist,merged:t.merged,zoom:t.zoom,fit:t.fit,cur:t.cur||1,bytes:null,tags:[]});await load(t.bytes,t.name,false,false,t.tags,t.srcs);viewer.scrollTop=t.st||0;drawTabs()}
-async function closeTab(i,ok){if(TABS.length<2)return;const t=TABS[i],nm=i===act?S.name:t.name;if(!ok&&(i===act?S.dirty:t.dirty)){confirmClose(i,nm);return}if(i===act){TABS.splice(i,1);act=-1;await switchTab(Math.min(i,TABS.length-1))}else{TABS.splice(i,1);if(i<act)act--;drawTabs()}toast('Pestaña cerrada: '+nm)}
-const fresh=async(b,name,handle)=>{if(TABS.length===1&&TABS[0].sample&&!S.dirty&&!S.hist.length){TABS.length=0;act=-1}snap();const src=[{n:name,c:SRC[0]}];TABS.push({handle,dirty:false,bytes:b,name,hist:[],tags:null,srcs:src,merged:[],zoom:1,fit:true,st:0,cur:1});act=TABS.length-1;Object.assign(S,{handle,dirty:false,hist:[],merged:[],fit:true,cur:1,bytes:null,tags:[]});await load(b,name,false,false,null,src);drawTabs()};
+async function closeTab(i,ok){if(!TABS[i])return;const t=TABS[i],nm=i===act?S.name:t.name;if(!ok&&(i===act?S.dirty:t.dirty)){confirmClose(i,nm);return}if(TABS.length===1){TABS.length=0;act=-1;goHome()}else if(i===act){TABS.splice(i,1);act=-1;await switchTab(Math.min(i,TABS.length-1))}else{TABS.splice(i,1);if(i<act)act--;drawTabs()}toast('Pestaña cerrada: '+nm)}
+const fresh=async(b,name,handle)=>{document.body.classList.remove('empty');snap();const src=[{n:name,c:SRC[0]}];TABS.push({handle,dirty:false,bytes:b,name,hist:[],tags:null,srcs:src,merged:[],zoom:1,fit:true,st:0,cur:1});act=TABS.length-1;Object.assign(S,{handle,dirty:false,hist:[],merged:[],fit:true,cur:1,bytes:null,tags:[]});await load(b,name,false,false,null,src);drawTabs()};
 $('#tabs').addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(x){e.stopPropagation();closeTab(+x.dataset.x);return}const t=e.target.closest('.tab');if(t)switchTab(+t.dataset.i)});
 $('#tabs').addEventListener('keydown',e=>{const t=e.target.closest('.tab');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();switchTab(+t.dataset.i)}if(e.target.classList.contains('tadd')&&e.key==='Enter')$('#fOpen').click()});
 
@@ -709,6 +733,7 @@ const hexRgb=h=>{const n=parseInt(h.slice(1),16);return L.rgb((n>>16&255)/255,(n
 async function drawTextBlock(d,pg,x,y){const f=await d.embedFont(L.StandardFonts[FFONT[TXT.font][0]]),z=TXT.size,C=hexRgb(TXT.col),op=TXT.op/100,lines=TXT.text.split('\n'),lh=z*TXT.lh,ws=lines.map(l=>f.widthOfTextAtSize(l,z)),mw=Math.max(...ws),off=w=>TXT.al==='c'?-w/2:TXT.al==='r'?-w:0,top=y+z*.65;
  if(TXT.hl||TXT.wb){const pad=z*.25,bx=x+off(mw)-pad,bh=lh*(lines.length-1)+z*1.3+pad*2;pg.drawRectangle({x:bx,y:top-bh+pad,width:mw+pad*2,height:bh,color:TXT.hl?L.rgb(1,.84,0):L.rgb(1,1,1),opacity:TXT.hl?.55:1})}
  lines.forEach((l,i)=>{const bx=x+off(ws[i]),by=y-z*.35-i*lh;if(l)pg.drawText(l,{x:bx,y:by,size:z,font:f,color:C,opacity:op});const t=Math.max(.5,z/16);if(TXT.u&&l)pg.drawLine({start:{x:bx,y:by-z*.13},end:{x:bx+ws[i],y:by-z*.13},thickness:t,color:C,opacity:op});if(TXT.st&&l)pg.drawLine({start:{x:bx,y:by+z*.3},end:{x:bx+ws[i],y:by+z*.3},thickness:t,color:C,opacity:op})})}
+$('#hPlan').onclick=()=>loadSample('plan');$('#hDoc').onclick=()=>loadSample('doc');
 const loadSample=async k=>{await fresh(k==='doc'?await sampleDoc():await sample(),k==='doc'?'Contrato de supervisión.pdf':'Vivienda Los Robles - planos.pdf');toast(k==='doc'?'Contrato de ejemplo abierto':'Plano de ejemplo abierto')};
 const PANELS={
 view:{h:()=>{const g=S.ocg?.getGroups?.(),nl=g?Object.keys(g).length:0;return`<h2>Documento</h2><p class="lead">Abre tu propio PDF, o prueba con un plano o un contrato de ejemplo. Todo se procesa en tu equipo, nada se sube a internet.</p>
@@ -1094,8 +1119,8 @@ const openM=id=>{$('#'+id).classList.add('on');$('#'+id+' [data-close]').focus()
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on')}));
 const NAT=window.evisualNative||null;
 const natHandle=(path,name)=>({name,nativePath:path,createWritable:async()=>{let blob;return{write:async b=>{blob=b},close:async()=>NAT.writeFile(path,new Uint8Array(await blob.arrayBuffer()))}}});
-const APP_V=(NAT&&NAT.version)||'1.0.0',UPURL='version.json';
-const NOTES=[{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
+const APP_V=(NAT&&NAT.version)||'1.0.1',UPURL='version.json';
+const NOTES=[{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
 const UP={st:'idle',last:null,remote:null,reg:null};
 const tm=d=>d?d.toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'todavía no';
 const vnum=v=>String(v||'0').split('.').map(Number).reduce((a,x)=>a*1000+(x||0),0);
@@ -1132,7 +1157,7 @@ try{const t=localStorage.getItem('evisual-theme');if(TH[t])setTheme(t,true);else
 $('#theme').onclick=e=>{e.stopPropagation();const p=$('#thPop'),r=$('#theme').getBoundingClientRect();p.style.top=r.bottom+6+'px';p.style.left=Math.max(8,Math.min(innerWidth-224,r.right-210))+'px';p.classList.toggle('on')};
 $('#thPop').onclick=e=>{const b=e.target.closest('button');if(b){setTheme(b.dataset.v);$('#thPop').classList.remove('on')}};
 addEventListener('click',e=>{if(!e.target.closest('#thPop'))$('#thPop').classList.remove('on')});
-$('#print').onclick=()=>{prUpd();openM('mPrint')};
+$('#print').onclick=()=>{if(!S.doc)return;prUpd();openM('mPrint')};
 let prPg='Todas';onSeg('prPg',v=>{prPg=v});
 const PAPERS=[['Del documento',[['doc','Igual que el documento']]],['ISO serie A',[['A0',841,1189],['A1',594,841],['A2',420,594],['A3',297,420],['A4',210,297],['A5',148,210],['A6',105,148]]],['ISO serie B',[['B3',353,500],['B4',250,353],['B5',176,250]]],
  ['Norteamérica',[['Carta',216,279],['Oficio (Legal)',216,356],['Doble carta (Tabloide)',279,432],['Media carta',140,216],['Ejecutivo',184,267]]],
@@ -1172,7 +1197,7 @@ function saveAs(data,name,type){if(NAT){const bl=data instanceof Blob?data:new B
  return Promise.resolve(dl())}
 const pdfName=()=>/\.pdf$/i.test(S.name)?S.name:S.name+'.pdf';
 function markSaved(){S.dirty=false;drawTabs()}
-async function doSave(as){if(!S.bytes)return;
+async function doSave(as){if(!S.bytes)return false;
  if(!as&&S.handle&&S.handle.createWritable){try{if(S.handle.requestPermission&&(await S.handle.requestPermission({mode:'readwrite'}))!=='granted')throw 0;const w=await S.handle.createWritable();await w.write(new Blob([S.bytes],{type:'application/pdf'}));await w.close();markSaved();toast('Guardado: '+S.handle.name);return true}catch(e){}}
  const h=await saveAs(S.bytes,pdfName());if(!h)return false;if(h!==true){S.handle=h;if(h.name!==S.name){S.name=h.name;meta()}}markSaved();return true}
 $('#save').title='Guardar (Ctrl+S) · Mayús + clic: Guardar como';$('#save').onclick=e=>doSave(e.shiftKey);
@@ -1188,12 +1213,12 @@ $('#shGrid').onclick=async e=>{const k=e.target.closest('button')?.dataset.k;if(
  if(k==='win'){const f=new File([b],nm,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:nm});$('#mShare').classList.remove('on')}catch(err){if(err.name!=='AbortError')toast('No se pudo compartir: '+err.message)}}else{await saveAs(b,nm);toast('Este equipo no tiene panel para compartir. Se guardó el archivo para que lo adjuntes.')}}
  else if(k==='mail'){const r=await saveAs(b,nm);if(r){location.href=`mailto:?subject=${encodeURIComponent(nm)}&body=${encodeURIComponent('Adjunto el documento '+nm+'.')}`;toast('Adjunta el archivo guardado al correo que se abrió.')}}
  else if(k==='copy'){if(await saveAs(b,nm))$('#mShare').classList.remove('on')}};
-$('#share').onclick=()=>{$('#shInfo').textContent=`${S.name} · ${fmt(S.bytes.length)}`;$('#shLite').checked=false;openM('mShare')};
+$('#share').onclick=()=>{if(!S.bytes)return;$('#shInfo').textContent=`${S.name} · ${fmt(S.bytes.length)}`;$('#shLite').checked=false;openM('mShare')};
 addEventListener('keydown',e=>{if(e.key==='Escape'){if($('.modal.on')){$$('.modal').forEach(m=>m.classList.remove('on'));return}if(S.place||S.draft){S.place=null;S.draft=null;S.hover=null;setHint('');$$('.stamps button.on').forEach(b=>b.classList.remove('on'));if(S.doc)for(let n=1;n<=S.doc.numPages;n++)drawOv(n);measPanel()}}
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();doSave(e.shiftKey);return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();$('#print').click();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='o'){e.preventDefault();$('label[for="fOpen"]').click();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/INPUT|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$('#undo').click()}});
 
 /* ---------- start ---------- */
-(async()=>{try{if(!P||!L)throw new Error('librerías no disponibles');await fresh(await sample(),'Vivienda Los Robles - planos.pdf');TABS[0].sample=true;setTool('view');NAT&&NAT.ready()}
+(async()=>{try{if(!P||!L)throw new Error('librerías no disponibles');S.tool='view';document.body.dataset.tool='view';goHome();NAT&&NAT.ready()}
  catch(e){console.error(e);viewer.innerHTML=`<p class="err">No se pudo iniciar el visor (${esc(e.message||e)}). Revisa tu conexión y vuelve a cargar la página.</p>`}})();
 }
 </script>
