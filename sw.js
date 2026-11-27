@@ -1,13 +1,14 @@
 /* Evisual service worker: funciona sin conexión y aplica actualizaciones al reiniciar.
    Para publicar una versión nueva: cambia VERSION aquí y "version" en version.json. */
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 const CACHE = 'evisual-' + VERSION;
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
   './vendor/pdf.min.js',
   './vendor/pdf.worker.min.js',
-  './vendor/pdf-lib.min.js'
+  './vendor/pdf-lib.min.js',
+  './vendor/fontkit.umd.min.js'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));

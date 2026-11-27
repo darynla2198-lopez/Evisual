@@ -77,6 +77,10 @@ ipcMain.handle('save-dialog', async (e, name, kind) => {
   const r = await dialog.showSaveDialog(win, { defaultPath: name, filters });
   return r.canceled ? null : r.filePath;
 });
+ipcMain.handle('read-asset', async (e, rel) => {
+  if (!/^fonts\/[\w-]+\.ttf$/.test(rel)) throw new Error('Archivo no permitido');
+  return fs.promises.readFile(path.join(__dirname, '..', rel));
+});
 ipcMain.handle('write-file', async (e, p, data) => {
   await fs.promises.writeFile(p, Buffer.from(data));
   return true;

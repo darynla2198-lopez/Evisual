@@ -19,9 +19,9 @@ Con GitHub Pages activado, Evisual está en `https://darynla2198-lopez.github.io
 
 - **Archivos**: abrir varios PDFs en pestañas, Guardar (Ctrl+S) sobre el mismo archivo, Guardar como (Mayús + clic o Ctrl+Mayús+S), aviso de cambios sin guardar, abrir PDFs con contraseña en modo lectura.
 - **Ver**: miniaturas que se pueden ocultar, zoom, vista dividida con dos documentos, tema claro, oscuro o automático.
-- **Editar**: texto existente y texto nuevo con fuentes, tamaños, colores, alineación y estilos; comentarios y resaltado.
+- **Editar**: texto existente (se reemplaza de verdad, sin recuadros) y texto nuevo, con más de 20 tipos de letra, negrita, cursiva, subrayado, tachado, tamaños, colores y alineación; comentarios y resaltado.
 - **Páginas**: arrastrar para ordenar, duplicar, girar, insertar, extraer, eliminar y recortar; unir PDFs con un color por documento.
-- **Ingeniería**: foliado automático o manual con diseño, encabezado y pie, marcas de agua, medición de distancias y áreas a escala, capas con consolidación sin pérdida.
+- **Ingeniería**: foliado automático (por rango de numeración, desde cualquier página o de atrás hacia adelante) o manual, con número en letras y letras especiales de numerador, máquina de escribir, esténcil y sello, encabezado y pie, marcas de agua, medición de distancias y áreas a escala, capas con consolidación sin pérdida.
 - **Firmas y sellos**: dibujados, escritos o cargados desde imagen, con fondo transparente.
 - **Seguridad**: contraseña y permisos, censura de información y limpieza de metadatos.
 - **Imprimir**: cualquier papel (ISO A y B, carta, oficio, tabloide, ARCH, ANSI, rollos de plotter, sobres o personalizado), escala, color, escala de grises o blanco y negro para planos, calidad hasta 450 ppp.
@@ -43,7 +43,8 @@ Con GitHub Pages activado, Evisual está en `https://darynla2198-lopez.github.io
 | `sw.js` | Funcionamiento sin conexión y actualizaciones |
 | `version.json` | Versión publicada y notas de Novedades |
 | `icons/` | Iconos de la app |
-| `vendor/` | pdf.js y pdf-lib incluidos, para funcionar sin internet |
+| `vendor/` | pdf.js, pdf-lib y fontkit incluidos, para funcionar sin internet |
+| `fonts/` | Tipos de letra libres que se incrustan en los PDF (ver LICENSES.txt) |
 | `desktop/` | Versión de escritorio para Windows (Electron) |
 | `package.json` | Configuración del instalador y de las actualizaciones |
 | `.github/workflows/release.yml` | Construye y publica el instalador .exe |

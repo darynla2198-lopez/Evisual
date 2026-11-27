@@ -1,0 +1,5 @@
+Letras incluidas en Evisual
+
+Roboto y Roboto Mono: Apache License 2.0.
+Open Sans, Lato, Montserrat, Poppins, Oswald, Merriweather, Playfair Display, Dancing Script, Special Elite, Stardos Stencil, Share Tech Mono, Black Ops One, Courier Prime, Orbitron y Allerta Stencil: SIL Open Font License 1.1.
+Todas son de Google Fonts y se pueden usar e incrustar libremente en documentos.

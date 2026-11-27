@@ -409,6 +409,7 @@ body[data-tool=view] .panel{display:none}
 <script src="vendor/pdf.min.js"></script>
 <script src="vendor/pdf.worker.min.js"></script>
 <script src="vendor/pdf-lib.min.js"></script>
+<script src="vendor/fontkit.umd.min.js"></script>
 <script>
 {
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -647,9 +648,20 @@ async function textLayer(el){
 function refreshTL(){$$('.pg',viewer).forEach(el=>el._done&&textLayer(el))}
 viewer.addEventListener('click',e=>{const b=e.target.closest('.tbox');if(!b)return;e.stopPropagation();const el=b.closest('.pg'),it=el._items[+b.dataset.i];$('.tedit',viewer)?.remove();
  const inp=document.createElement('input');inp.className='tedit';inp.value=it.str;inp.style.left=b.style.left;inp.style.top=b.style.top;inp.style.width=Math.max(parseFloat(b.style.width)+40,120)+'px';inp.style.height=Math.max(parseFloat(b.style.height)+6,28)+'px';inp.style.fontSize=Math.max(12,parseFloat(b.style.height)*.78)+'px';el.appendChild(inp);inp.focus();inp.select();
- let done=false;const fin=ok=>{if(done)return;done=true;const v=inp.value;inp.remove();if(ok&&v!==it.str)editText(+el.dataset.n,it,v)};
+ inp.style.fontFamily=famCss(TXT.fam);inp.style.fontWeight=TXT.b?700:400;inp.style.fontStyle=TXT.i?'italic':'normal';it.bg=bgAt(el,b);
+ let done=false;const fin=ok=>{if(done)return;done=true;const v=inp.value;inp.remove();if(ok&&(v!==it.str||TXT.styled))editText(+el.dataset.n,it,v)};
  inp.onkeydown=k=>{if(k.key==='Enter')fin(true);if(k.key==='Escape'){k.stopPropagation();fin(false)}};inp.onblur=()=>fin(true)},true);
-function editText(n,it,v){modify(async d=>{const pg=d.getPage(n-1),f=await d.embedFont(L.StandardFonts[FFONT[TXT.font][0]]);pg.drawRectangle({x:it.x-1.5,y:it.y-it.h*.26,width:Math.max(it.w,f.widthOfTextAtSize(v,it.h))+3,height:it.h*1.22,color:L.rgb(1,1,1)});if(v.trim())pg.drawText(v,{x:it.x,y:it.y,size:it.h,font:f,color:hexRgb(TXT.col)})},v.trim()?'Texto editado':'Texto borrado')}
+function editText(n,it,v){modify(async d=>{const pg=d.getPage(n-1),cut=await cutTextOnPage(d,pg,it);
+ if(!cut){const g=it.bg||[1,1,1];pg.drawRectangle({x:it.x-1,y:it.y-it.h*.26,width:it.w+2,height:it.h*1.22,color:L.rgb(g[0],g[1],g[2])})}
+ if(!v.trim())return;const {f,sk}=await famFont(d,TXT.fam,TXT.b,TXT.i),z=TXT.esz||it.h,w=f.widthOfTextAtSize(v,z),C=hexRgb(TXT.col),op=TXT.op/100,t=Math.max(.5,z/16),
+  x=TXT.ea==='c'?it.x+it.w/2-w/2:TXT.ea==='r'?it.x+it.w-w:it.x,y=it.y;
+ if(TXT.hl)pg.drawRectangle({x:x-z*.15,y:y-z*.28,width:w+z*.3,height:z*1.25,color:L.rgb(1,.84,0),opacity:.55});
+ pg.drawText(v,{x,y,size:z,font:f,color:C,opacity:op,...(sk?{ySkew:L.degrees(sk)}:{})});
+ if(TXT.u)pg.drawLine({start:{x,y:y-z*.13},end:{x:x+w,y:y-z*.13},thickness:t,color:C,opacity:op});
+ if(TXT.st)pg.drawLine({start:{x,y:y+z*.3},end:{x:x+w,y:y+z*.3},thickness:t,color:C,opacity:op})},v.trim()?'Texto editado':'Texto borrado')}
+function bgAt(el,b){const c=$('canvas',el);if(!c)return null;try{const k=c.width/el.clientWidth,x0=parseFloat(b.style.left)*k,y0=parseFloat(b.style.top)*k,w=parseFloat(b.style.width)*k,h=parseFloat(b.style.height)*k,x=c.getContext('2d'),pts=[];
+ for(let i=0;i<=10;i++){pts.push([x0-2+i*(w+4)/10,y0-2],[x0-2+i*(w+4)/10,y0+h+2])}const cols=pts.map(([px,py])=>{const p=x.getImageData(Math.max(0,Math.min(c.width-1,px|0)),Math.max(0,Math.min(c.height-1,py|0)),1,1).data;return[p[0],p[1],p[2]]});
+ const md=i=>cols.map(q=>q[i]).sort((a,b)=>a-b)[cols.length>>1]/255;return[md(0),md(1),md(2)]}catch(e){return null}}
 
 /* ---------- second pane: two documents side by side ---------- */
 const B={doc:null,name:'',zoom:1,fit:true,bytes:null};let io2;const v2=$('#viewer2');
@@ -693,7 +705,7 @@ function drawOv(n){const el=$(`.pg[data-n="${n}"]`,viewer);if(!el)return;const v
  if(drag&&drag.n===n){const [x,y,w,hh]=RV(nrm(drag.a,drag.b)),c=S.tool==='comment'?CM.col:S.tool==='protect'?'#000':'#1f5eff';h+=`<rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${c}" fill-opacity="${S.tool==='crop'?0:.4}" stroke="${S.tool==='comment'?'none':'#1f5eff'}" stroke-width="2" stroke-dasharray="6 4"/>`}
  $('svg',el).innerHTML=h}
 async function placeAt(n,[x,y]){const pl=S.place;
- if(pl.kind==='folio'){const s=folLabel(FOL.num,S.doc.numPages);await modify(async d=>{const f=await d.embedFont(L.StandardFonts[FFONT[FOL.font][0]]),tw=f.widthOfTextAtSize(s,FOL.size);drawFolio(d.getPage(n-1),f,s,x-tw/2,y-FOL.size/2)},`Folio "${s}" puesto en la página ${n}`);FOL.num++;if(S.tool==='folio')showPanel();return}
+ if(pl.kind==='folio'){const s=folLabel(FOL.num,S.doc.numPages);await modify(async d=>{const f=(await famFont(d,FOL.fam,FOL.b,false)).f,tw=f.widthOfTextAtSize(s,FOL.size);drawFolio(d.getPage(n-1),f,s,x-tw/2,y-FOL.size/2)},`Folio "${s}" puesto en la página ${n}`);FOL.num++;if(S.tool==='folio')showPanel();return}
  await modify(async d=>{const pg=d.getPage(n-1);
  if(pl.kind==='text')await drawTextBlock(d,pg,x,y)
  else{const im=await d.embedPng(pl.png);pg.drawImage(im,{x:x-pl.w/2,y:y-pl.h/2,width:pl.w,height:pl.h})}},pl.msg+' en la página '+n)}
@@ -709,7 +721,7 @@ function setTool(t){const was=S.tool;S.tool=t;S.place=null;S.draft=null;S.hover=
 function showPanel(){const fn=PANELS[S.tool];if(!S.doc)return;panel.innerHTML=fn.h();fn.b&&fn.b();syncSel()}
 const seg=(id,opts,cur)=>`<div class="seg" id="${id}">${opts.map(([v,l])=>`<button data-v="${v}" class="${v===cur?'on':''}">${l}</button>`).join('')}</div>`;
 const onSeg=(id,cb)=>$('#'+id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));cb(b.dataset.v)});
-const SIGN={mode:'draw',name:'Daniela Ríos',drawn:false,img:null},TXT={mode:'edit',text:'Verificar cota en obra',size:14,font:'hv',col:'#16171a',al:'l',u:false,st:false,hl:false,wb:false,lh:1.25,op:100},FOL={mode:'auto',pre:'Folio ',fmt:'pad',start:1,pos:'br',size:10,font:'hvb',style:'box',col:'k',range:'',num:1,page:1},STP={k:0,who:'Ing. residente',date:true,own:null},FLAT={mode:'vec',jpg:false,dpi:300,q:90,out:null};
+const SIGN={mode:'draw',name:'Daniela Ríos',drawn:false,img:null},TXT={mode:'edit',text:'Verificar cota en obra',size:14,esz:0,fam:'hv',b:false,i:false,ea:'l',font:'hv',col:'#16171a',al:'l',u:false,st:false,hl:false,wb:false,lh:1.25,op:100},FOL={mode:'auto',pre:'Folio ',fmt:'pad',start:1,end:'',from:1,rev:false,pos:'br',size:10,font:'hvb',fam:'nu',b:false,style:'box',col:'k',range:'',num:1,page:1},STP={k:0,who:'Ing. residente',date:true,own:null},FLAT={mode:'vec',jpg:false,dpi:300,q:90,out:null};
 const COLS={k:[.09,.09,.1],r:[.91,.28,.11],b:[.14,.27,.78]};
 const FFONT={hv:['Helvetica','Helvetica','Helvetica, Arial, sans-serif','400','normal'],hvb:['HelveticaBold','Helvetica negrita','Helvetica, Arial, sans-serif','700','normal'],hvi:['HelveticaOblique','Helvetica cursiva','Helvetica, Arial, sans-serif','400','italic'],
  tm:['TimesRoman','Times','"Times New Roman", Times, serif','400','normal'],tmb:['TimesRomanBold','Times negrita','"Times New Roman", Times, serif','700','normal'],tmi:['TimesRomanItalic','Times cursiva','"Times New Roman", Times, serif','400','italic'],
@@ -717,7 +729,10 @@ const FFONT={hv:['Helvetica','Helvetica','Helvetica, Arial, sans-serif','400','n
 const FCOL={k:[.09,.09,.1],b:[.1,.2,.55],r:[.75,.12,.1],g:[.08,.42,.24]},FCSS={k:'#17171a',b:'#1a338c',r:'#bf1f1a',g:'#146b3d'};
 const FSTY=[['none','Sin marco'],['box','Recuadro'],['double','Doble línea'],['round','Redondeado'],['under','Subrayado'],['tag','Etiqueta']];
 function fCss(st,col){const c=FCSS[col];return{none:'',box:`border:1.5px solid ${c};padding:3px 10px`,double:`border:4px double ${c};padding:2px 9px`,round:`border:1.5px solid ${c};border-radius:999px;padding:3px 12px`,under:`border-bottom:2px solid ${c};padding:0 2px`,tag:`background:${c};color:#fff;border-radius:999px;padding:4px 12px`}[st]}
-function folLabel(n,N){return FOL.pre+(FOL.fmt==='pad'?String(n).padStart(3,'0'):FOL.fmt==='of'?`${n} de ${N}`:n)}
+function numWords(n){const U=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve','veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'],D=['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'],C=['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+ const h=x=>x<30?U[x]:x<100?D[x/10|0]+(x%10?' y '+U[x%10]:''):x===100?'cien':C[x/100|0]+(x%100?' '+h(x%100):'');
+ if(n<1000)return h(n);const m=n/1000|0,r=n%1000;return(m===1?'mil':h(m).replace(/uno$/,'un')+' mil')+(r?' '+h(r):'')}
+function folLabel(n,N){return FOL.pre+(FOL.fmt==='pad'?String(n).padStart(3,'0'):FOL.fmt==='of'?`${n} de ${N}`:FOL.fmt==='words'?`${String(n).padStart(3,'0')} (${numWords(n)})`:FOL.fmt==='wordsonly'?numWords(n):n)}
 function drawFolio(pg,f,s,x,y){const z=FOL.size,tw=f.widthOfTextAtSize(s,z),C=L.rgb(...FCOL[FOL.col]),Wt=L.rgb(1,1,1),bx=x-z*.6,by=y-z*.38,bw=tw+z*1.2,bh=z*1.45,st=FOL.style;let K=C;
  if(st==='box')pg.drawRectangle({x:bx,y:by,width:bw,height:bh,color:Wt,borderColor:C,borderWidth:.8});
  if(st==='double'){pg.drawRectangle({x:bx-2,y:by-2,width:bw+4,height:bh+4,color:Wt,borderColor:C,borderWidth:.6});pg.drawRectangle({x:bx,y:by,width:bw,height:bh,borderColor:C,borderWidth:.6})}
@@ -729,10 +744,67 @@ async function imgCanvas(file,clean){const bm=await createImageBitmap(file),k=Ma
  if(clean){const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){const l=(a[i]+a[i+1]+a[i+2])/3;if(l>225)a[i+3]=0;else if(l>190)a[i+3]=Math.round(a[i+3]*(225-l)/35)}x.putImageData(d,0,0)}return c}
 const imgPlace=(c,w,msg)=>({kind:'img',png:bytesOf(c),w,h:w*c.height/c.width,msg});
 const TCOL=[['#16171a','Negro'],['#5f6168','Gris'],['#d62d20','Rojo'],['#e8471c','Naranja'],['#c98a00','Ámbar'],['#1d7a46','Verde'],['#0e7c86','Turquesa'],['#2346c8','Azul'],['#1a2b6b','Azul marino'],['#7b3fb5','Morado'],['#ffffff','Blanco']];
+const FAMS=[['hv','Helvetica','Helvetica, Arial, sans-serif',{r:'Helvetica',b:'HelveticaBold',i:'HelveticaOblique',bi:'HelveticaBoldOblique'}],
+ ['tm','Times New Roman','"Times New Roman", Times, serif',{r:'TimesRoman',b:'TimesRomanBold',i:'TimesRomanItalic',bi:'TimesRomanBoldItalic'}],
+ ['cr','Courier (máquina de escribir)','"Courier New", Courier, monospace',{r:'Courier',b:'CourierBold',i:'CourierOblique',bi:'CourierBoldOblique'}],
+ ['ro','Roboto','"Ev Roboto", sans-serif',null,'Roboto',1],['os','Open Sans','"Ev OpenSans", sans-serif',null,'OpenSans',1],['la','Lato','"Ev Lato", sans-serif',null,'Lato',1],
+ ['mo','Montserrat','"Ev Montserrat", sans-serif',null,'Montserrat',1],['po','Poppins','"Ev Poppins", sans-serif',null,'Poppins',1],['ow','Oswald (condensada)','"Ev Oswald", sans-serif',null,'Oswald',0],
+ ['mw','Merriweather','"Ev Merriweather", serif',null,'Merriweather',1],['pf','Playfair Display','"Ev PlayfairDisplay", serif',null,'PlayfairDisplay',1],
+ ['rm','Roboto Mono','"Ev RobotoMono", monospace',null,'RobotoMono',1],['ds','Dancing Script (manuscrita)','"Ev DancingScript", cursive',null,'DancingScript',0],
+ ['nu','Numerador (máquina foliadora)','"Ev ShareTechMono", monospace',null,'ShareTechMono',0,0,1],['mq','Máquina de escribir','"Ev SpecialElite", monospace',null,'SpecialElite',0,0,1],
+ ['cp','Courier Prime (oficio)','"Ev CourierPrime", monospace',null,'CourierPrime',1,1,1],['es','Esténcil','"Ev StardosStencil", serif',null,'StardosStencil',0,1,1],
+ ['ea','Esténcil industrial','"Ev AllertaStencil", sans-serif',null,'AllertaStencil',0,0,1],['se','Sello militar','"Ev BlackOpsOne", sans-serif',null,'BlackOpsOne',0,0,1],['dg','Digital (Orbitron)','"Ev Orbitron", sans-serif',null,'Orbitron',0,1,1]];
+{const st=document.createElement('style');st.textContent=FAMS.filter(f=>f[4]).map(f=>[['r',400,'normal'],['b',700,'normal']].concat(f[5]?[['i',400,'italic'],['bi',700,'italic']]:[]).map(([k,w,y])=>(k==='b'&&f[6]===0)?'':`@font-face{font-family:"Ev ${f[4]}";src:url(fonts/${f[4]}-${k}.ttf);font-weight:${w};font-style:${y};font-display:swap}`).join('')).join('');document.head.appendChild(st)}
+const FBYTES={};
+async function fontBytes(key){if(FBYTES[key])return FBYTES[key];let b=null;
+ if(window.evisualNative&&evisualNative.readAsset)b=await evisualNative.readAsset('fonts/'+key+'.ttf');
+ else{const r=await fetch('fonts/'+key+'.ttf');if(!r.ok)throw new Error('no se encontró el archivo de la letra');b=new Uint8Array(await r.arrayBuffer())}
+ return FBYTES[key]=new Uint8Array(b)}
+async function famFont(d,id,bold,ital){const F=FAMS.find(x=>x[0]===id)||FAMS[0];
+ if(F[3])return{f:await d.embedFont(L.StandardFonts[F[3][bold&&ital?'bi':bold?'b':ital?'i':'r']]),sk:0};
+ const it=ital&&F[5],bb=bold&&F[6]!==0,k=((bb?'b':'')+(it?'i':''))||'r';
+ if(!d._fk){if(!window.fontkit)throw new Error('no se pudo cargar el motor de letras');d.registerFontkit(fontkit);d._fk=1}
+ return{f:await d.embedFont(await fontBytes(F[4]+'-'+k),{subset:true}),sk:ital&&!F[5]?12:0}}
+const famCss=id=>(FAMS.find(x=>x[0]===id)||FAMS[0])[2];
+/* remove the text drawn at a pdf.js text item from the page content (real deletion, no cover box) */
+function cutText(src,it){const WS=' \t\r\n\f\0',DL='()<>[]{}/%',n=src.length;let i=0,ops=[],argS=-1,out='',seg=0,hits=0;
+ let ctm=[1,0,0,1,0,0],gs=[],tm=[1,0,0,1,0,0],tlm=[1,0,0,1,0,0],TL=0,pos=true,prev=false;
+ const mul=(a,b)=>[a[0]*b[0]+a[1]*b[2],a[0]*b[1]+a[1]*b[3],a[2]*b[0]+a[3]*b[2],a[2]*b[1]+a[3]*b[3],a[4]*b[0]+a[5]*b[2]+b[4],a[4]*b[1]+a[5]*b[3]+b[5]];
+ const num=k=>parseFloat(ops[ops.length-k])||0,tol=Math.max(1,it.h*.35);
+ const at=()=>{const m=mul(tm,ctm);return Math.abs(m[5]-it.y)<tol&&m[4]>=it.x-1.5&&m[4]<it.x+Math.max(it.w,1)-.5};
+ const tstar=()=>{tlm=mul([1,0,0,1,0,-TL],tlm);tm=[...tlm];pos=true};
+ while(i<n){const c=src[i];
+  if(WS.includes(c)){i++;continue}
+  if(c==='%'){while(i<n&&src[i]!=='\n'&&src[i]!=='\r')i++;continue}
+  const st=i;
+  if(c==='('){let d=1;i++;while(i<n&&d){const h=src[i];if(h==='\\')i+=2;else{if(h==='(')d++;else if(h===')')d--;i++}}if(argS<0)argS=st;ops.push('s');continue}
+  if(c==='<'&&src[i+1]==='<'){i+=2;if(argS<0)argS=st;ops.push('<<');continue}
+  if(c==='>'&&src[i+1]==='>'){i+=2;ops.push('>>');continue}
+  if(c==='<'){const k=src.indexOf('>',i);i=k<0?n:k+1;if(argS<0)argS=st;ops.push('h');continue}
+  if('[]{}'.includes(c)){i++;if(argS<0)argS=st;ops.push(c);continue}
+  let j=i+(c==='/'?1:0);while(j<n&&!WS.includes(src[j])&&!DL.includes(src[j]))j++;if(j===i){i++;continue}
+  const t=src.slice(i,j);i=j;
+  if(c==='/'||/^[+\-.\d]/.test(t)||t==='true'||t==='false'||t==='null'){if(argS<0)argS=st;ops.push(t);continue}
+  if(t==='ID'){const m=/\sEI(?=\s|$)/g;m.lastIndex=i;const r=m.exec(src);i=r?r.index+3:n}
+  const a0=argS<0?st:argS;
+  if(t==='q')gs.push(ctm);else if(t==='Q')ctm=gs.pop()||ctm;
+  else if(t==='cm')ctm=mul([num(6),num(5),num(4),num(3),num(2),num(1)],ctm);
+  else if(t==='BT'){tm=[1,0,0,1,0,0];tlm=[...tm];pos=true;prev=false}
+  else if(t==='Td'||t==='TD'){if(t==='TD')TL=-num(1);tlm=mul([1,0,0,1,num(2),num(1)],tlm);tm=[...tlm];pos=true}
+  else if(t==='Tm'){tlm=[num(6),num(5),num(4),num(3),num(2),num(1)];tm=[...tlm];pos=true}
+  else if(t==='T*')tstar();else if(t==='TL')TL=num(1);
+  else if(t==='Tj'||t==='TJ'||t==="'"||t==='"'){if(t!=='Tj'&&t!=='TJ')tstar();const hit=pos?at():prev;
+   if(hit){hits++;out+=src.slice(seg,a0)+(t==="'"?' T* ':t==='"'?` ${ops[0]} Tw ${ops[1]} Tc T* `:' ');seg=i}
+   prev=hit;pos=false}
+  ops=[];argS=-1}
+ return{out:hits?out+src.slice(seg):src,hits}}
+async function cutTextOnPage(d,pg,it){const cx=d.context,C=pg.node.Contents();if(!C)return 0;const list=C instanceof L.PDFArray?Array.from({length:C.size()},(_,i)=>cx.lookup(C.get(i))):[C],parts=[];
+ for(const st of list){const b=await streamBytes(st);if(!b)return 0;parts.push(l1(b))}
+ const r=cutText(parts.join('\n'),it);if(r.hits)pg.node.set(L.PDFName.of('Contents'),cx.register(cx.flateStream(u8(r.out))));return r.hits}
 const hexRgb=h=>{const n=parseInt(h.slice(1),16);return L.rgb((n>>16&255)/255,(n>>8&255)/255,(n&255)/255)};
-async function drawTextBlock(d,pg,x,y){const f=await d.embedFont(L.StandardFonts[FFONT[TXT.font][0]]),z=TXT.size,C=hexRgb(TXT.col),op=TXT.op/100,lines=TXT.text.split('\n'),lh=z*TXT.lh,ws=lines.map(l=>f.widthOfTextAtSize(l,z)),mw=Math.max(...ws),off=w=>TXT.al==='c'?-w/2:TXT.al==='r'?-w:0,top=y+z*.65;
+async function drawTextBlock(d,pg,x,y){const {f,sk}=await famFont(d,TXT.fam,TXT.b,TXT.i),SK=sk?{ySkew:L.degrees(sk)}:{},z=TXT.size,C=hexRgb(TXT.col),op=TXT.op/100,lines=TXT.text.split('\n'),lh=z*TXT.lh,ws=lines.map(l=>f.widthOfTextAtSize(l,z)),mw=Math.max(...ws),off=w=>TXT.al==='c'?-w/2:TXT.al==='r'?-w:0,top=y+z*.65;
  if(TXT.hl||TXT.wb){const pad=z*.25,bx=x+off(mw)-pad,bh=lh*(lines.length-1)+z*1.3+pad*2;pg.drawRectangle({x:bx,y:top-bh+pad,width:mw+pad*2,height:bh,color:TXT.hl?L.rgb(1,.84,0):L.rgb(1,1,1),opacity:TXT.hl?.55:1})}
- lines.forEach((l,i)=>{const bx=x+off(ws[i]),by=y-z*.35-i*lh;if(l)pg.drawText(l,{x:bx,y:by,size:z,font:f,color:C,opacity:op});const t=Math.max(.5,z/16);if(TXT.u&&l)pg.drawLine({start:{x:bx,y:by-z*.13},end:{x:bx+ws[i],y:by-z*.13},thickness:t,color:C,opacity:op});if(TXT.st&&l)pg.drawLine({start:{x:bx,y:by+z*.3},end:{x:bx+ws[i],y:by+z*.3},thickness:t,color:C,opacity:op})})}
+ lines.forEach((l,i)=>{const bx=x+off(ws[i]),by=y-z*.35-i*lh;if(l)pg.drawText(l,{x:bx,y:by,size:z,font:f,color:C,opacity:op,...SK});const t=Math.max(.5,z/16);if(TXT.u&&l)pg.drawLine({start:{x:bx,y:by-z*.13},end:{x:bx+ws[i],y:by-z*.13},thickness:t,color:C,opacity:op});if(TXT.st&&l)pg.drawLine({start:{x:bx,y:by+z*.3},end:{x:bx+ws[i],y:by+z*.3},thickness:t,color:C,opacity:op})})}
 $('#hPlan').onclick=()=>loadSample('plan');$('#hDoc').onclick=()=>loadSample('doc');
 const loadSample=async k=>{await fresh(k==='doc'?await sampleDoc():await sample(),k==='doc'?'Contrato de supervisión.pdf':'Vivienda Los Robles - planos.pdf');toast(k==='doc'?'Contrato de ejemplo abierto':'Plano de ejemplo abierto')};
 const PANELS={
@@ -741,26 +813,27 @@ view:{h:()=>{const g=S.ocg?.getGroups?.(),nl=g?Object.keys(g).length:0;return`<h
  <label class="btn pri full" for="fOpen">Abrir PDF</label><div class="g2"><button class="btn" id="vS">Plano de ejemplo</button><button class="btn" id="vD">Contrato de ejemplo</button></div><p class="note" style="margin:0 0 20px">También puedes arrastrar un PDF a la ventana.</p>
  <h3>¿Qué quieres hacer?</h3><div class="tools">${TOOLS.slice(1).map(t=>`<button data-t="${t[0]}">${ico(t[2])}${t[1]}<small>${t[3]}</small></button>`).join('')}</div>`},
  b:()=>{$('#vS').onclick=()=>loadSample('plan');$('#vD').onclick=()=>loadSample('doc');$('.tools',panel).onclick=e=>{const b=e.target.closest('button');b&&setTool(b.dataset.t)}}},
-text:{h:()=>{const add=TXT.mode==='add';return`<h2>Texto</h2>${seg('tM',[['edit','Editar existente'],['add','Agregar texto']],TXT.mode)}
- <div id="tE" ${add?'hidden':''}><p class="lead">Pasa el cursor sobre la hoja: cada línea de texto se puede tocar. Escribe el cambio y pulsa Enter.</p><div class="tip">Esc cancela. Si borras todo el texto, la línea desaparece. El cambio usa la letra y el color de abajo, con el tamaño original.</div>
+text:{h:()=>{const add=TXT.mode==='add',AL=[['l','M4 6h16M4 10h10M4 14h16M4 18h10','Izquierda'],['c','M4 6h16M7 10h10M4 14h16M7 18h10','Centrado'],['r','M4 6h16M10 10h10M4 14h16M10 18h10','Derecha']],al=add?TXT.al:TXT.ea;return`<h2>Texto</h2>${seg('tM',[['edit','Editar existente'],['add','Agregar texto']],TXT.mode)}
+ <div id="tE" ${add?'hidden':''}><p class="lead">Elige abajo la letra y el estilo, toca una línea de texto en la hoja, escribe el cambio y pulsa Enter.</p><div class="tip">El texto original se elimina del PDF, sin dejar recuadro ni fondo. Esc cancela; si borras todo, la línea desaparece.</div>
   ${/planos/i.test(S.name)?'<button class="btn full" id="tDoc">Probar con el contrato de ejemplo</button>':''}</div>
  <div id="tA" ${add?'':'hidden'}><p class="lead">Escribe tu texto, dale estilo y haz clic en la hoja donde quieras ponerlo.</p>
  <label class="f"><span>Texto (Enter para otra línea)</span><textarea id="tT" maxlength="400">${esc(TXT.text)}</textarea></label></div>
- <h3>Letra</h3><div class="g2" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)"><label class="f"><span>Tipo de letra</span><select id="tF">${Object.entries(FFONT).map(([k,v])=>`<option value="${k}" ${k===TXT.font?'selected':''}>${v[1]}</option>`).join('')}</select></label>
- <label class="f" ${add?'':'hidden'}><span>Tamaño</span><select id="tS">${[8,9,10,11,12,14,16,18,20,24,28,32,40,48,60,72].map(s=>`<option ${s==TXT.size?'selected':''}>${s}</option>`).join('')}</select></label></div>
+ <h3>Letra</h3><div class="g2" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)"><label class="f"><span>Tipo de letra</span><select id="tF">${FAMS.map(f=>`<option value="${f[0]}" ${f[0]===TXT.fam?'selected':''} style="font-family:${f[2].replace(/"/g,"'")}">${f[1]}</option>`).join('')}</select></label>
+ <label class="f"><span>Tamaño</span><select id="tS">${add?'':`<option value="0" ${TXT.esz?'':'selected'}>Original</option>`}${[8,9,10,11,12,14,16,18,20,24,28,32,40,48,60,72].map(s=>`<option value="${s}" ${s==(add?TXT.size:TXT.esz)?'selected':''}>${s}</option>`).join('')}</select></label></div>
+ <div class="f"><span>Estilo</span><div class="tg" id="tG" style="margin:0"><button data-k="b" class="${TXT.b?'on':''}" style="font-weight:700">Negrita</button><button data-k="i" class="${TXT.i?'on':''}" style="font-style:italic">Cursiva</button><button data-k="u" class="${TXT.u?'on':''}" style="text-decoration:underline">Subrayado</button><button data-k="st" class="${TXT.st?'on':''}" style="text-decoration:line-through">Tachado</button><button data-k="hl" class="${TXT.hl?'on':''}">Resaltado</button>${add?`<button data-k="wb" class="${TXT.wb?'on':''}">Fondo blanco</button>`:''}</div></div>
+ <div class="f"><span>${add?'Alineación desde el punto donde haces clic':'Alineación dentro de la línea original'}</span><div class="seg al" id="tAl" style="margin:0">${AL.map(([v,d,t])=>`<button data-v="${v}" title="${t}" class="${v===al?'on':''}">${ico(d)}</button>`).join('')}</div></div>
  <div class="f"><span>Color</span><div class="swt" id="tC" style="margin:0">${TCOL.map(([c,n])=>`<button data-c="${c}" title="${n}" style="background:${c}" class="${c===TXT.col?'on':''}"></button>`).join('')}<input type="color" id="tCc" value="${TXT.col}" title="Otro color"></div></div>
- <div ${add?'':'hidden'}><div class="f"><span>Alineación desde el punto donde haces clic</span><div class="seg al" id="tAl" style="margin:0">${[['l','M4 6h16M4 10h10M4 14h16M4 18h10','Izquierda'],['c','M4 6h16M7 10h10M4 14h16M7 18h10','Centro'],['r','M4 6h16M10 10h10M4 14h16M10 18h10','Derecha']].map(([v,d,t])=>`<button data-v="${v}" title="${t}" class="${v===TXT.al?'on':''}">${ico(d)}</button>`).join('')}</div></div>
- <div class="f"><span>Estilo</span><div class="tg" id="tG" style="margin:0"><button data-k="u" class="${TXT.u?'on':''}" style="text-decoration:underline">Subrayado</button><button data-k="st" class="${TXT.st?'on':''}" style="text-decoration:line-through">Tachado</button><button data-k="hl" class="${TXT.hl?'on':''}">Resaltado</button><button data-k="wb" class="${TXT.wb?'on':''}">Fondo blanco</button></div></div>
- <div class="g2"><label class="f"><span>Interlineado</span><select id="tLh">${[[1,'Sencillo'],[1.25,'1.25'],[1.5,'1.5'],[2,'Doble']].map(([v,l])=>`<option value="${v}" ${v==TXT.lh?'selected':''}>${l}</option>`).join('')}</select></label>
- <label class="f"><span>Opacidad: <b id="tOv">${TXT.op}%</b></span><input type="range" id="tO" min="20" max="100" step="5" value="${TXT.op}"></label></div></div>
+ <div class="g2">${add?`<label class="f"><span>Interlineado</span><select id="tLh">${[[1,'Sencillo'],[1.25,'1.25'],[1.5,'1.5'],[2,'Doble']].map(([v,l])=>`<option value="${v}" ${v==TXT.lh?'selected':''}>${l}</option>`).join('')}</select></label>`:''}
+ <label class="f"><span>Opacidad: <b id="tOv">${TXT.op}%</b></span><input type="range" id="tO" min="20" max="100" step="5" value="${TXT.op}"></label></div>
  <span class="note" style="margin:0">Vista previa</span><div class="fprev" style="place-items:stretch"><div id="tP"></div></div>
  ${add?'<div class="tip">Haz clic en la hoja para colocar el texto. Puedes poner varios; Esc para terminar.</div>':''}`},
- b:()=>{const prev=()=>{const ff=FFONT[TXT.font],P=$('#tP'),add=TXT.mode==='add';P.textContent=add?(TXT.text||' '):'Texto editado';
-   P.style.cssText=`font-family:${ff[2]};font-weight:${ff[3]};font-style:${ff[4]};font-size:${Math.min(30,Math.max(12,(add?TXT.size:12)*1.3))}px;line-height:${add?TXT.lh:1.25};color:${TXT.col};white-space:pre-wrap;text-align:${add?{l:'left',c:'center',r:'right'}[TXT.al]:'left'};opacity:${add?TXT.op/100:1};text-decoration:${add?[TXT.u?'underline':'',TXT.st?'line-through':''].join(' ').trim()||'none':'none'};background:${add&&TXT.hl?'rgba(255,214,0,.55)':add&&TXT.wb?'#fff':'transparent'};${TXT.col.toLowerCase()==='#ffffff'?'background:#3a3b40;':''}padding:4px 6px;overflow-wrap:anywhere`};
+ b:()=>{const prev=()=>{const P=$('#tP'),add=TXT.mode==='add',a=add?TXT.al:TXT.ea;P.textContent=add?(TXT.text||' '):'Texto editado';
+   P.style.cssText=`font-family:${famCss(TXT.fam)};font-weight:${TXT.b?700:400};font-style:${TXT.i?'italic':'normal'};font-size:${Math.min(30,Math.max(12,(add?TXT.size:(TXT.esz||12))*1.3))}px;line-height:${add?TXT.lh:1.25};color:${TXT.col};white-space:pre-wrap;text-align:${{l:'left',c:'center',r:'right'}[a]};opacity:${TXT.op/100};text-decoration:${[TXT.u?'underline':'',TXT.st?'line-through':''].join(' ').trim()||'none'};background:${TXT.hl?'rgba(255,214,0,.55)':add&&TXT.wb?'#fff':'transparent'};${TXT.col.toLowerCase()==='#ffffff'?'background:#3a3b40;':''}padding:4px 6px;overflow-wrap:anywhere`;
+   TXT.styled=!add&&(TXT.b||TXT.i||TXT.u||TXT.st||TXT.hl||TXT.esz||TXT.ea!=='l'||TXT.fam!=='hv'||TXT.op<100||TXT.col!=='#16171a')};
   const up=()=>{prev();if(TXT.mode!=='add'){S.place=null;setHint('Toca una línea de texto para editarla');return}S.place=TXT.text.trim()?{kind:'text',msg:'Texto agregado'}:null;setHint(S.place?'Clic en la hoja para colocar el texto':'')};
-  $('#tT').oninput=e=>{TXT.text=e.target.value;up()};$('#tS').onchange=e=>{TXT.size=+e.target.value;up()};$('#tF').onchange=e=>{TXT.font=e.target.value;up()};$('#tLh').onchange=e=>{TXT.lh=+e.target.value;up()};$('#tO').oninput=e=>{TXT.op=+e.target.value;$('#tOv').textContent=TXT.op+'%';up()};
+  $('#tT').oninput=e=>{TXT.text=e.target.value;up()};$('#tS').onchange=e=>{if(TXT.mode==='add')TXT.size=+e.target.value;else TXT.esz=+e.target.value;up()};$('#tF').onchange=e=>{TXT.fam=e.target.value;up()};$('#tLh')&&($('#tLh').onchange=e=>{TXT.lh=+e.target.value;up()});$('#tO').oninput=e=>{TXT.op=+e.target.value;$('#tOv').textContent=TXT.op+'%';up()};
   const setC=c=>{TXT.col=c;$$('#tC button').forEach(b=>b.classList.toggle('on',b.dataset.c===c));$('#tCc').value=c;up()};$('#tC').onclick=e=>{const b=e.target.closest('button');b&&setC(b.dataset.c)};$('#tCc').oninput=e=>setC(e.target.value);
-  onSeg('tAl',v=>{TXT.al=v;up()});$('#tG').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;TXT[k]=!TXT[k];if(k==='hl'&&TXT.hl)TXT.wb=false;if(k==='wb'&&TXT.wb)TXT.hl=false;$$('#tG button').forEach(x=>x.classList.toggle('on',!!TXT[x.dataset.k]));up()};
+  onSeg('tAl',v=>{if(TXT.mode==='add')TXT.al=v;else TXT.ea=v;up()});$('#tG').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;TXT[k]=!TXT[k];if(k==='hl'&&TXT.hl)TXT.wb=false;if(k==='wb'&&TXT.wb)TXT.hl=false;$$('#tG button').forEach(x=>x.classList.toggle('on',!!TXT[x.dataset.k]));up()};
   onSeg('tM',v=>{TXT.mode=v;S.place=null;showPanel();viewer.classList.toggle('cross',v==='add');refreshTL()});$('#tDoc')&&($('#tDoc').onclick=()=>loadSample('doc'));viewer.classList.toggle('cross',TXT.mode==='add');up()}},
 merge:{h:()=>`<h2>Combinar PDFs</h2><p class="lead">Agrega PDFs al final del documento. Cada archivo toma un color para que distingas sus páginas.</p>
  <label class="btn pri full" for="mF">Elegir PDFs para unir</label><input type="file" id="mF" accept="application/pdf,.pdf" multiple hidden>
@@ -788,23 +861,26 @@ pages:{h:()=>`<h2>Organizar páginas</h2><p class="lead">Arrastra las páginas p
   $('#pgI').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const b=await readPdf(f);if(!b)return;const p=pos();modify(async(d,cx)=>{const src=await L.PDFDocument.load(b,{ignoreEncryption:true}),pp=await d.copyPages(src,src.getPageIndices()),k=cx.srcs.length;cx.srcs.push({n:f.name,c:SRC[k%SRC.length]});pp.forEach((pg,i)=>{d.insertPage(p+i,pg);cx.tags.splice(p+i,0,k)})},`Se insertaron páginas de ${f.name}`)}}},
 folio:{h:()=>`<h2>Foliar</h2>${seg('fM',[['auto','Automático'],['manual','Manual']],FOL.mode)}
  <p class="lead">${FOL.mode==='auto'?'Numera todas las páginas, o un rango, con un solo botón.':'Elige el número y la hoja, o haz clic en cualquier punto de una hoja para poner el folio ahí. El número sube solo.'}</p>
- <div class="g2"><label class="f"><span>Texto antes</span><input id="fP" value="${esc(FOL.pre)}" maxlength="20"></label>${FOL.mode==='auto'?`<label class="f"><span>Empezar en</span><input id="fS" type="number" min="0" value="${FOL.start}"></label>`:`<label class="f"><span>Número de folio</span><input id="fN" type="number" min="0" value="${FOL.num}"></label>`}</div>
- ${FOL.mode==='auto'?`<label class="f"><span>Páginas (vacío = todas)</span><input id="fR" value="${esc(FOL.range)}" placeholder="Ejemplo: 2-${S.doc.numPages}" inputmode="numeric"></label>`:`<label class="f"><span>Hoja</span><select id="fG">${Array.from({length:S.doc.numPages},(_,i)=>`<option value="${i+1}" ${i+1===FOL.page?'selected':''}>Página ${i+1}</option>`).join('')}</select></label>`}
- <div class="g2"><label class="f"><span>Formato</span><select id="fF"><option value="pad">001, 002</option><option value="of">1 de ${S.doc.numPages}</option><option value="plain">1, 2, 3</option></select></label><label class="f"><span>Tamaño</span><select id="fZ">${[8,10,12,14,18].map(s=>`<option ${s==FOL.size?'selected':''}>${s}</option>`).join('')}</select></label></div>
+ <div class="g2"><label class="f"><span>Texto antes</span><input id="fP" value="${esc(FOL.pre)}" maxlength="20"></label>${FOL.mode==='auto'?`<label class="f"><span>Desde la página</span><select id="fFr">${Array.from({length:S.doc.numPages},(_,i)=>`<option value="${i+1}" ${i+1===FOL.from?'selected':''}>Página ${i+1}</option>`).join('')}</select></label>`:`<label class="f"><span>Número de folio</span><input id="fN" type="number" min="0" value="${FOL.num}"></label>`}</div>
+ ${FOL.mode==='auto'?`<div class="f"><span>Rango de numeración</span><div class="g2" style="margin:0"><label class="f" style="margin:0"><span>Del folio</span><input id="fS" type="number" min="0" value="${FOL.start}"></label><label class="f" style="margin:0"><span>Al folio</span><input id="fE" type="number" min="0" value="${FOL.end}" placeholder="Hasta el final"></label></div></div>
+ <label class="chk"><input type="checkbox" id="fRv" ${FOL.rev?'checked':''}>Numerar de atrás hacia adelante (la última página lleva el primer folio)</label><p class="note" id="fInfo" style="margin:0 0 12px"></p>`:`<label class="f"><span>Hoja</span><select id="fG">${Array.from({length:S.doc.numPages},(_,i)=>`<option value="${i+1}" ${i+1===FOL.page?'selected':''}>Página ${i+1}</option>`).join('')}</select></label>`}
+ <div class="g2"><label class="f"><span>Formato</span><select id="fF"><option value="pad">001, 002</option><option value="of">1 de ${S.doc.numPages}</option><option value="plain">1, 2, 3</option><option value="words">045 (cuarenta y cinco)</option><option value="wordsonly">cuarenta y cinco</option></select></label><label class="f"><span>Tamaño</span><select id="fZ">${[8,9,10,11,12,14,16,18,20,24].map(s=>`<option ${s==FOL.size?'selected':''}>${s}</option>`).join('')}</select></label></div>
  <label class="f"><span>Posición</span><select id="fO"><option value="br">Abajo a la derecha</option><option value="bc">Abajo al centro</option><option value="bl">Abajo a la izquierda</option><option value="tr">Arriba a la derecha</option><option value="tc">Arriba al centro</option><option value="tl">Arriba a la izquierda</option></select></label>
  <h3>Diseño del folio</h3>
- <label class="f"><span>Tipo de letra</span><select id="fT">${Object.entries(FFONT).map(([k,v])=>`<option value="${k}" style="font-family:${v[2].replace(/"/g,"'")};font-weight:${v[3]};font-style:${v[4]}">${v[1]}</option>`).join('')}</select></label>
+ <div class="g2" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)"><label class="f"><span>Tipo de letra</span><select id="fT"><optgroup label="Especiales para foliar">${FAMS.filter(f=>f[7]).map(f=>`<option value="${f[0]}" ${f[0]===FOL.fam?'selected':''}>${f[1]}</option>`).join('')}</optgroup><optgroup label="Generales">${FAMS.filter(f=>!f[7]).map(f=>`<option value="${f[0]}" ${f[0]===FOL.fam?'selected':''}>${f[1]}</option>`).join('')}</optgroup></select></label>
+ <label class="chk" style="align-self:end;margin-bottom:14px"><input type="checkbox" id="fB" ${FOL.b?'checked':''}>Negrita</label></div>
  <div class="f"><span>Estilo</span><div class="fst" id="fSt">${FSTY.map(([k,l])=>`<button data-v="${k}" class="${k===FOL.style?'on':''}" title="${l}"><span style="${fCss(k,'k')}">${l}</span></button>`).join('')}</div></div>
  <div class="f"><span>Color</span>${seg('fC',[['k','Negro'],['b','Azul'],['r','Rojo'],['g','Verde']],FOL.col)}</div>
  <span class="note" style="margin:0">Vista previa</span><div class="fprev"><span id="fV"></span></div>
  <button class="btn pri full" id="fGo"></button>`,
- b:()=>{$('#fF').value=FOL.fmt;$('#fO').value=FOL.pos;$('#fT').value=FOL.font;const auto=FOL.mode==='auto',N=S.doc.numPages,targets=()=>FOL.range.trim()?[...parseRange(FOL.range)].sort((a,b)=>a-b):Array.from({length:N},(_,i)=>i+1);
-  const up=()=>{FOL.pre=$('#fP').value;FOL.fmt=$('#fF').value;FOL.pos=$('#fO').value;FOL.size=+$('#fZ').value;FOL.font=$('#fT').value;const ff=FFONT[FOL.font],fv=$('#fV');fv.style.cssText=`font-family:${ff[2]};font-weight:${ff[3]};font-style:${ff[4]};font-size:${Math.min(40,FOL.size*2.4)}px;color:${FCSS[FOL.col]};${fCss(FOL.style,FOL.col)}`;
-   if(auto){FOL.start=Math.max(0,parseInt($('#fS').value)||0);FOL.range=$('#fR').value;const t=targets();$('#fV').textContent=folLabel(FOL.start,FOL.start+t.length-1);$('#fGo').textContent=`Foliar ${t.length} página${t.length===1?'':'s'}`;$('#fGo').disabled=!t.length}
+ b:()=>{$('#fF').value=FOL.fmt;$('#fO').value=FOL.pos;const auto=FOL.mode==='auto',N=S.doc.numPages,targets=()=>{const fr=Math.min(N,Math.max(1,FOL.from)),avail=N-fr+1,e=parseInt(FOL.end),want=e>=FOL.start?e-FOL.start+1:avail;return Array.from({length:Math.min(avail,want)},(_,i)=>fr+i)};
+  const up=()=>{FOL.pre=$('#fP').value;FOL.fmt=$('#fF').value;FOL.pos=$('#fO').value;FOL.size=+$('#fZ').value;FOL.fam=$('#fT').value;FOL.b=$('#fB').checked;const fv=$('#fV');fv.style.cssText=`font-family:${famCss(FOL.fam)};font-weight:${FOL.b?700:400};font-style:normal;font-size:${Math.min(40,FOL.size*2.4)}px;color:${FCSS[FOL.col]};${fCss(FOL.style,FOL.col)}`;
+   if(auto){FOL.start=Math.max(0,parseInt($('#fS').value)||0);FOL.end=$('#fE').value;FOL.from=+$('#fFr').value;FOL.rev=$('#fRv').checked;const t=targets(),last=FOL.start+t.length-1,e=parseInt(FOL.end);$('#fV').textContent=folLabel(FOL.rev?last:FOL.start,last);
+   $('#fInfo').textContent=t.length?`Folios ${FOL.start} al ${last} en las páginas ${t[0]} a ${t[t.length-1]}.`+(e>=FOL.start&&e>last?` El documento solo alcanza hasta el folio ${last}.`:'')+(e<FOL.start&&FOL.end!==''?' El folio final debe ser mayor que el inicial.':''):'';$('#fGo').textContent=`Foliar ${t.length} página${t.length===1?'':'s'} (del ${FOL.start} al ${last})`;$('#fGo').disabled=!t.length}
    else{FOL.num=Math.max(0,parseInt($('#fN').value)||0);FOL.page=+$('#fG').value;$('#fV').textContent=folLabel(FOL.num,N);$('#fGo').textContent=`Foliar la página ${FOL.page}`;S.place={kind:'folio'};setHint('Clic en la hoja para poner: '+folLabel(FOL.num,N))}};
   $$('input,select',panel).forEach(i=>i.oninput=up);$('#fSt').onclick=e=>{const b=e.target.closest('button');if(!b)return;FOL.style=b.dataset.v;$$('#fSt button').forEach(x=>x.classList.toggle('on',x===b));up()};onSeg('fC',v=>{FOL.col=v;up()});onSeg('fM',v=>{FOL.mode=v;S.place=null;setHint('');showPanel()});up();
-  $('#fGo').onclick=()=>{if(auto){const t=targets(),last=FOL.start+t.length-1;modify(async d=>{const f=await d.embedFont(L.StandardFonts[FFONT[FOL.font][0]]);t.forEach((n,i)=>folioAt(d.getPage(n-1),f,folLabel(FOL.start+i,last)))},`Se folió${t.length===1?' 1 página':`ron ${t.length} páginas`}`)}
-   else{const s=folLabel(FOL.num,N),pg=FOL.page;modify(async d=>{const f=await d.embedFont(L.StandardFonts[FFONT[FOL.font][0]]);folioAt(d.getPage(pg-1),f,s)},`Folio "${s}" puesto en la página ${pg}`).then(()=>{FOL.num++;FOL.page=Math.min(N,pg+1);showPanel()})}}}},
+  $('#fGo').onclick=()=>{if(auto){const t=targets(),last=FOL.start+t.length-1;modify(async d=>{const f=(await famFont(d,FOL.fam,FOL.b,false)).f;t.forEach((n,i)=>folioAt(d.getPage(n-1),f,folLabel(FOL.rev?last-i:FOL.start+i,last)))},`Se folió${t.length===1?' 1 página':`ron ${t.length} páginas`}: del ${FOL.start} al ${last}${FOL.rev?', de atrás hacia adelante':''}`)}
+   else{const s=folLabel(FOL.num,N),pg=FOL.page;modify(async d=>{const f=(await famFont(d,FOL.fam,FOL.b,false)).f;folioAt(d.getPage(pg-1),f,s)},`Folio "${s}" puesto en la página ${pg}`).then(()=>{FOL.num++;FOL.page=Math.min(N,pg+1);showPanel()})}}}},
 comment:{h:()=>`<h2>Comentar</h2>${seg('cmM',[['note','Nota'],['hl','Resaltar']],CM.mode)}
  <p class="lead">${CM.mode==='note'?'Escribe el comentario y haz clic en la hoja donde quieras dejarlo.':'Arrastra sobre el texto o la zona que quieres resaltar.'}</p>
  ${CM.mode==='note'?`<label class="f"><span>Comentario</span><textarea id="cmT" maxlength="500">${esc(CM.text)}</textarea></label>`:''}
@@ -1119,8 +1195,8 @@ const openM=id=>{$('#'+id).classList.add('on');$('#'+id+' [data-close]').focus()
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on')}));
 const NAT=window.evisualNative||null;
 const natHandle=(path,name)=>({name,nativePath:path,createWritable:async()=>{let blob;return{write:async b=>{blob=b},close:async()=>NAT.writeFile(path,new Uint8Array(await blob.arrayBuffer()))}}});
-const APP_V=(NAT&&NAT.version)||'1.0.1',UPURL='version.json';
-const NOTES=[{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
+const APP_V=(NAT&&NAT.version)||'1.0.2',UPURL='version.json';
+const NOTES=[{v:'1.0.2',d:'2026-11-27',n:['Editar texto ya no deja fondo blanco: el texto original se elimina del PDF', 'Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado', 'Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display', 'Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante', 'Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello']},{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
 const UP={st:'idle',last:null,remote:null,reg:null};
 const tm=d=>d?d.toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'todavía no';
 const vnum=v=>String(v||'0').split('.').map(Number).reduce((a,x)=>a*1000+(x||0),0);

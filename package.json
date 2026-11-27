@@ -1,7 +1,7 @@
 {
   "name": "evisual",
   "productName": "Evisual",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Editor de PDF para planos y documentos.",
   "main": "desktop/main.js",
   "author": "Evisual",
@@ -29,6 +29,7 @@
       "version.json",
       "icons/**",
       "vendor/**",
+      "fonts/**",
       "desktop/**",
       "package.json"
     ],

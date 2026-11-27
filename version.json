@@ -1,7 +1,18 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.2",
+      "d": "2026-11-27",
+      "n": [
+        "Editar texto ya no deja fondo blanco: el texto original se elimina del PDF",
+        "Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado",
+        "Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display",
+        "Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante",
+        "Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello"
+      ]
+    },
     {
       "v": "1.0.1",
       "d": "2026-11-27",
