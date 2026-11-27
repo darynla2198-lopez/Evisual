@@ -1,7 +1,11 @@
 # Crea el instalador de Windows y lo publica en GitHub Releases.
-# Para lanzar una versión: sube la versión en package.json, sw.js y version.json,
-# y crea una etiqueta (git tag v1.0.1 && git push origin v1.0.1),
-# o pulsa "Run workflow" en la pestaña Actions y la etiqueta se crea sola.
+# Para lanzar una versión:
+#   1. Escribe sus notas arriba de "notes" en version.json.
+#   2. Ejecuta "npm version 1.0.3" (estable) o "npm version 1.0.3-beta.1" (beta):
+#      copia la versión a sw.js, version.json e index.html y crea la etiqueta.
+#   3. git push --follow-tags (o pulsa "Run workflow" en Actions).
+# Una versión con guion (1.0.3-beta.1) se publica como "pre-release": solo la
+# reciben quienes activaron "Recibir versiones beta" en Novedades.
 name: Instalador de Windows
 
 on:
@@ -21,6 +25,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Revisar que la versión coincide en todos los archivos
+        run: node scripts/sync-version.js --check
       - run: npx electron-builder --win --publish never
       - name: Publicar en GitHub Releases
         shell: bash
@@ -28,13 +34,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           V=$(node -p "require('./package.json').version")
+          # Versión con guion (1.0.3-beta.1) = beta: se publica como pre-release.
+          if [[ "$V" == *-* ]]; then KIND=(--prerelease); echo "Canal beta: $V"; else KIND=(--prerelease=false --latest); echo "Canal estable: $V"; fi
           node -e "const v=process.argv[1],j=require('./version.json'),r=(j.notes||[]).find(n=>n.v===v);require('fs').writeFileSync('notas.md',(r?r.n.map(x=>'- '+x).join('\\n'):'Evisual '+v)+'\\n')" "$V"
           printf '\n**Descargas**\n- `Evisual-Setup-%s.exe`: instalador. Se actualiza solo, en silencio.\n- `Evisual-Portable-%s.exe`: portable, se abre sin instalar. Busca versiones nuevas al abrir, las descarga y reemplaza el .exe al cerrar (si la carpeta donde está permite escribir; si no, avisa con un enlace de descarga).\n' "$V" "$V" >> notas.md
           if ! gh release view "v$V" >/dev/null 2>&1; then
-            gh release create "v$V" --title "Evisual $V" --notes-file notas.md --target "$GITHUB_SHA"
+            gh release create "v$V" --title "Evisual $V" --notes-file notas.md --target "$GITHUB_SHA" "${KIND[0]}"
           fi
           gh release upload "v$V" "dist/Evisual-Portable-$V.exe" "dist/Evisual-Setup-$V.exe" "dist/Evisual-Setup-$V.exe.blockmap" dist/latest.yml --clobber
-          gh release edit "v$V" --title "Evisual $V" --notes-file notas.md --latest
+          gh release edit "v$V" --title "Evisual $V" --notes-file notas.md "${KIND[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: Evisual-instalador

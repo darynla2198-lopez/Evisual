@@ -30,9 +30,17 @@ Con GitHub Pages activado, Evisual está en `https://darynla2198-lopez.github.io
 
 ## Publicar una actualización
 
-1. Sube el número de versión en `package.json`, en `VERSION` de `sw.js` y en `version.json` (con sus notas).
-2. En la pestaña **Actions** de GitHub, abre "Instalador de Windows" y pulsa **Run workflow** (o crea la etiqueta `v1.0.1` tú misma).
-3. GitHub Actions construye el instalador y lo publica en Releases. Las apps instaladas lo detectan solas.
+La versión se escribe solo en `package.json`; un script la copia a `sw.js`, `version.json` e `index.html`.
+
+1. Escribe las notas de la versión arriba de `"notes"` en `version.json` (son las que aparecen en Novedades).
+2. Ejecuta `npm version 1.0.3`. Copia la versión a todos los archivos, crea el commit y la etiqueta `v1.0.3`.
+3. Ejecuta `git push --follow-tags`. GitHub Actions construye el instalador y lo publica en Releases, y las apps instaladas lo detectan solas.
+
+Si cambias la versión a mano, ejecuta `npm run version:sync`. El flujo de publicación se detiene si algún archivo quedó con otra versión.
+
+### Versiones beta
+
+Una versión con guion, como `1.0.3-beta.1`, se publica como "pre-release". Solo la reciben quienes activan **Recibir versiones beta** en Novedades (app de Windows); el resto sigue en la versión estable. Publica las betas desde una rama `beta`, no desde `main`, para que la versión web no las tome.
 
 ## Archivos
 

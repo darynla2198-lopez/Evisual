@@ -96,6 +96,21 @@ ipcMain.handle('write-file', async (e, p, data) => {
 // - descarga en segundo plano solo la parte que cambió (blockmap),
 // - se instala en silencio al cerrar Evisual, o al pulsar "Reiniciar ahora".
 let autoCheck = true, lastUpdate = null, checking = false;
+
+// Preferencias de la app de escritorio (por ahora, solo el canal de actualizaciones).
+const settingsFile = () => path.join(app.getPath('userData'), 'evisual-settings.json');
+function readSettings() {
+  try { return JSON.parse(fs.readFileSync(settingsFile(), 'utf8')) || {}; } catch (e) { return {}; }
+}
+function writeSettings(s) {
+  try { fs.writeFileSync(settingsFile(), JSON.stringify(s, null, 2)); } catch (e) { /* sin permisos: se usa el valor en memoria */ }
+}
+// Canal Beta: con la opción activa también se reciben las versiones marcadas como
+// "pre-release" en GitHub (por ejemplo 1.0.7-beta.1). Sin ella, solo las estables.
+// Se aplica aquí, antes de cualquier checkNow().
+let beta = readSettings().beta === true;
+autoUpdater.allowPrerelease = beta;
+autoUpdater.allowDowngrade = false;
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 autoUpdater.on('update-available', i => sendUpdate(lastUpdate = { type: 'available', version: i.version }));
@@ -164,6 +179,14 @@ async function checkNow() {
   finally { checking = false; }
 }
 ipcMain.handle('check-updates', () => checkNow());
+// La versión portable solo recibe estables (consulta releases/latest), así que ahí no se ofrece Beta.
+ipcMain.handle('get-beta', () => (PORTABLE ? null : beta));
+ipcMain.handle('set-beta', (e, on) => {
+  beta = on === true;
+  autoUpdater.allowPrerelease = beta;
+  writeSettings({ ...readSettings(), beta });
+  return beta;
+});
 ipcMain.on('set-auto-update', (e, on) => { autoCheck = !!on; });
 ipcMain.on('ready', () => {
   if (lastUpdate) sendUpdate(lastUpdate);

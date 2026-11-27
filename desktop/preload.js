@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('evisualNative', {
   pickFolder: () => ipcRenderer.invoke('pick-folder'),
   readAsset: rel => ipcRenderer.invoke('read-asset', rel),
   checkUpdates: () => ipcRenderer.invoke('check-updates'),
+  getBeta: () => ipcRenderer.invoke('get-beta'),
+  setBeta: on => ipcRenderer.invoke('set-beta', on),
   installUpdate: () => ipcRenderer.send('install-update'),
   setAutoUpdate: on => ipcRenderer.send('set-auto-update', on)
 });
