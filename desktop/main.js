@@ -73,6 +73,7 @@ ipcMain.on('ready', () => { rendererReady = true; pending.splice(0).forEach(send
 ipcMain.handle('save-dialog', async (e, name, kind) => {
   const filters = kind === 'png' ? [{ name: 'Imagen PNG', extensions: ['png'] }]
     : kind === 'jpg' ? [{ name: 'Imagen JPG', extensions: ['jpg', 'jpeg'] }]
+    : kind === 'zip' ? [{ name: 'Archivo ZIP', extensions: ['zip'] }]
     : [{ name: 'Documento PDF', extensions: ['pdf'] }];
   const r = await dialog.showSaveDialog(win, { defaultPath: name, filters });
   return r.canceled ? null : r.filePath;
@@ -80,6 +81,10 @@ ipcMain.handle('save-dialog', async (e, name, kind) => {
 ipcMain.handle('read-asset', async (e, rel) => {
   if (!/^fonts\/[\w-]+\.ttf$/.test(rel)) throw new Error('Archivo no permitido');
   return fs.promises.readFile(path.join(__dirname, '..', rel));
+});
+ipcMain.handle('pick-folder', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Elegir carpeta para guardar las imágenes', properties: ['openDirectory', 'createDirectory'] });
+  return r.canceled || !r.filePaths.length ? null : r.filePaths[0];
 });
 ipcMain.handle('write-file', async (e, p, data) => {
   await fs.promises.writeFile(p, Buffer.from(data));

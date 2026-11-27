@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('evisualNative', {
   onUpdate: cb => ipcRenderer.on('update', (e, u) => cb(u)),
   saveDialog: (name, kind) => ipcRenderer.invoke('save-dialog', name, kind),
   writeFile: (p, data) => ipcRenderer.invoke('write-file', p, data),
+  pickFolder: () => ipcRenderer.invoke('pick-folder'),
   readAsset: rel => ipcRenderer.invoke('read-asset', rel),
   checkUpdates: () => ipcRenderer.invoke('check-updates'),
   installUpdate: () => ipcRenderer.send('install-update'),

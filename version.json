@@ -1,7 +1,16 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.7",
+      "d": "2026-11-27",
+      "n": [
+        "Extraer imágenes: elige con casillas cuáles descargar, con Seleccionar todas y Ninguna",
+        "Varias imágenes se guardan juntas en una carpeta (o en un ZIP en la web), en PNG o JPG",
+        "Foliar: márgenes horizontal y vertical en mm, con vista de la ubicación en la hoja"
+      ]
+    },
     {
       "v": "1.0.6",
       "d": "2026-11-27",
