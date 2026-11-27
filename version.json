@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "date": "2026-11-27",
+  "notes": [
+    { "v": "1.0.0", "d": "2026-11-27", "n": [
+      "Pestañas para trabajar con varios documentos",
+      "Edición de texto existente y texto nuevo con fuentes, colores y alineación",
+      "Firmas y sellos dibujados, escritos o desde imagen",
+      "Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar",
+      "Foliado automático o manual con diseño de fuente y estilo",
+      "Encabezado, pie de página y marcas de agua",
+      "Comentarios y resaltado",
+      "Protección con contraseña, permisos, censura y limpieza de metadatos",
+      "Consolidación de capas sin pérdida",
+      "Medición de distancias y áreas en planos",
+      "Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter",
+      "Vista dividida, tema claro u oscuro, funciona sin conexión"
+    ] }
+  ]
+}

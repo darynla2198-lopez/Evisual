@@ -1,0 +1,53 @@
+{
+  "name": "evisual",
+  "productName": "Evisual",
+  "version": "1.0.0",
+  "description": "Editor de PDF para planos y documentos.",
+  "main": "desktop/main.js",
+  "author": "Evisual",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.evisual.app",
+    "productName": "Evisual",
+    "copyright": "Evisual",
+    "files": [
+      "index.html",
+      "manifest.webmanifest",
+      "version.json",
+      "icons/**",
+      "vendor/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Evisual",
+      "artifactName": "Evisual-Setup-${version}.${ext}"
+    },
+    "fileAssociations": [
+      { "ext": "pdf", "name": "Documento PDF", "description": "Documento PDF", "role": "Editor", "icon": "icons/icon-512.png" }
+    ],
+    "publish": [{ "provider": "github", "owner": "darynla2198-lopez", "repo": "Evisual", "releaseType": "release" }]
+  }
+}

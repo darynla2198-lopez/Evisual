@@ -1,0 +1,29 @@
+# Crea el instalador de Windows y lo publica en GitHub Releases.
+# Para lanzar una versión: sube la versión en package.json, sw.js y version.json,
+# y crea una etiqueta, por ejemplo: git tag v1.0.1 && git push origin v1.0.1
+name: Instalador de Windows
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Evisual-instalador
+          path: dist/*.exe
