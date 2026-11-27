@@ -9,6 +9,9 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "version": "node scripts/sync-version.js && git add sw.js version.json index.html",
+    "version:sync": "node scripts/sync-version.js",
+    "version:check": "node scripts/sync-version.js --check",
     "dist": "electron-builder --win",
     "release": "electron-builder --win --publish always"
   },

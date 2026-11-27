@@ -1,5 +1,5 @@
 /* Evisual service worker: funciona sin conexión y aplica actualizaciones al reiniciar.
-   Para publicar una versión nueva: cambia VERSION aquí y "version" en version.json. */
+   La versión se copia sola desde package.json (npm run version:sync); no la cambies aquí. */
 const VERSION = '1.0.8';
 const CACHE = 'evisual-' + VERSION;
 const SHELL = [
