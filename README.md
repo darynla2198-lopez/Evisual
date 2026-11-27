@@ -7,7 +7,7 @@ Editor de PDF para ingeniería civil y para el público en general: planos y doc
 1. Entra en [Releases](https://github.com/darynla2198-lopez/Evisual/releases/latest) y descarga `Evisual-Setup-<versión>.exe`.
 2. Ábrelo y sigue el asistente. Evisual queda en el menú Inicio, en el escritorio y como programa para abrir PDFs.
 3. Para abrir PDFs con doble clic: clic derecho en un PDF > Abrir con > Evisual > "Usar siempre esta aplicación".
-4. Las actualizaciones se descargan solas y se instalan al reiniciar (también desde Novedades).
+4. Las actualizaciones son automáticas: Evisual busca al abrir y cada 3 horas, descarga en segundo plano y se instala en silencio (sin asistente) al cerrar o al pulsar **Reiniciar ahora**.
 
 Windows puede mostrar el aviso de SmartScreen la primera vez porque el instalador aún no tiene firma digital: pulsa "Más información" > "Ejecutar de todas formas".
 

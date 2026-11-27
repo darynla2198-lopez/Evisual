@@ -86,15 +86,31 @@ ipcMain.handle('write-file', async (e, p, data) => {
   return true;
 });
 
-// Actualizaciones: se descargan en segundo plano y se instalan al reiniciar.
+// Actualizaciones automáticas, sin asistente:
+// - busca al abrir y cada 3 horas (si el usuario no lo desactivó en Novedades),
+// - descarga en segundo plano solo la parte que cambió (blockmap),
+// - se instala en silencio al cerrar Evisual, o al pulsar "Reiniciar ahora".
+let autoCheck = true, lastUpdate = null, checking = false;
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
-autoUpdater.on('update-available', i => sendUpdate({ type: 'available', version: i.version }));
+autoUpdater.on('update-available', i => sendUpdate(lastUpdate = { type: 'available', version: i.version }));
 autoUpdater.on('update-not-available', () => sendUpdate({ type: 'none' }));
-autoUpdater.on('update-downloaded', i => sendUpdate({ type: 'downloaded', version: i.version }));
+autoUpdater.on('update-downloaded', i => sendUpdate(lastUpdate = { type: 'downloaded', version: i.version }));
 autoUpdater.on('error', err => sendUpdate({ type: 'error', message: String(err && err.message || err) }));
-ipcMain.handle('check-updates', async () => {
+async function checkNow() {
   if (!app.isPackaged) { sendUpdate({ type: 'none' }); return false; }
-  try { await autoUpdater.checkForUpdates(); return true; } catch (e) { sendUpdate({ type: 'error', message: e.message }); return false; }
+  if (lastUpdate && lastUpdate.type === 'downloaded') { sendUpdate(lastUpdate); return true; }
+  if (checking) return true;
+  checking = true;
+  try { await autoUpdater.checkForUpdates(); return true; }
+  catch (e) { sendUpdate({ type: 'error', message: e.message }); return false; }
+  finally { checking = false; }
+}
+ipcMain.handle('check-updates', () => checkNow());
+ipcMain.on('set-auto-update', (e, on) => { autoCheck = !!on; });
+ipcMain.on('ready', () => {
+  if (lastUpdate) sendUpdate(lastUpdate);
+  setTimeout(() => { if (autoCheck) checkNow(); }, 8000);
 });
-ipcMain.on('install-update', () => autoUpdater.quitAndInstall(false, true));
+setInterval(() => { if (autoCheck) checkNow(); }, 3 * 60 * 60 * 1000);
+ipcMain.on('install-update', () => { setImmediate(() => autoUpdater.quitAndInstall(true, true)); });

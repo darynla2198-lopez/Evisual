@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld('evisualNative', {
   writeFile: (p, data) => ipcRenderer.invoke('write-file', p, data),
   readAsset: rel => ipcRenderer.invoke('read-asset', rel),
   checkUpdates: () => ipcRenderer.invoke('check-updates'),
-  installUpdate: () => ipcRenderer.send('install-update')
+  installUpdate: () => ipcRenderer.send('install-update'),
+  setAutoUpdate: on => ipcRenderer.send('set-auto-update', on)
 });

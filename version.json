@@ -1,7 +1,16 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.6",
+      "d": "2026-11-27",
+      "n": [
+        "Actualizaciones automáticas sin asistente: se instalan en silencio, sin pulsar Instalar ni Finish, y Evisual se vuelve a abrir solo",
+        "Busca versiones nuevas al abrir y cada 3 horas, y descarga solo lo que cambió",
+        "Aviso discreto con Reiniciar ahora o Más tarde; si eliges Más tarde, se instala al cerrar Evisual"
+      ]
+    },
     {
       "v": "1.0.5",
       "d": "2026-11-27",
