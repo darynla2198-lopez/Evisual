@@ -29,10 +29,11 @@ jobs:
         run: |
           V=$(node -p "require('./package.json').version")
           node -e "const v=process.argv[1],j=require('./version.json'),r=(j.notes||[]).find(n=>n.v===v);require('fs').writeFileSync('notas.md',(r?r.n.map(x=>'- '+x).join('\\n'):'Evisual '+v)+'\\n')" "$V"
+          printf '\n**Descargas**\n- `Evisual-Setup-%s.exe`: instalador. Se actualiza solo, en silencio.\n- `Evisual-Portable-%s.exe`: portable, se abre sin instalar. Busca versiones nuevas al abrir, las descarga y reemplaza el .exe al cerrar (si la carpeta donde está permite escribir; si no, avisa con un enlace de descarga).\n' "$V" "$V" >> notas.md
           if ! gh release view "v$V" >/dev/null 2>&1; then
             gh release create "v$V" --title "Evisual $V" --notes-file notas.md --target "$GITHUB_SHA"
           fi
-          gh release upload "v$V" "dist/Evisual-Setup-$V.exe" "dist/Evisual-Setup-$V.exe.blockmap" dist/latest.yml --clobber
+          gh release upload "v$V" "dist/Evisual-Portable-$V.exe" "dist/Evisual-Setup-$V.exe" "dist/Evisual-Setup-$V.exe.blockmap" dist/latest.yml --clobber
           gh release edit "v$V" --title "Evisual $V" --notes-file notas.md --latest
       - uses: actions/upload-artifact@v4
         with:

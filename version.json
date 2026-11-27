@@ -1,7 +1,15 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.8",
+      "d": "2026-11-27",
+      "n": [
+        "Nueva versión portable para Windows: un solo .exe que se abre sin instalar (ideal para USB o equipos sin permisos)",
+        "La portable también se actualiza: busca versiones nuevas al abrir, las descarga en segundo plano y reemplaza el .exe al cerrar o al pulsar Reiniciar ahora"
+      ]
+    },
     {
       "v": "1.0.7",
       "d": "2026-11-27",

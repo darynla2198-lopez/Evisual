@@ -102,8 +102,60 @@ autoUpdater.on('update-available', i => sendUpdate(lastUpdate = { type: 'availab
 autoUpdater.on('update-not-available', () => sendUpdate({ type: 'none' }));
 autoUpdater.on('update-downloaded', i => sendUpdate(lastUpdate = { type: 'downloaded', version: i.version }));
 autoUpdater.on('error', err => sendUpdate({ type: 'error', message: String(err && err.message || err) }));
+// Versión portable: no hay instalación que actualizar, así que Evisual
+// descarga el .exe portable nuevo en segundo plano y, al cerrar, un pequeño
+// script espera a que el .exe actual se libere, lo reemplaza y (si se pidió) lo abre.
+const PORTABLE = !!process.env.PORTABLE_EXECUTABLE_DIR;
+const PORT_FILE = process.env.PORTABLE_EXECUTABLE_FILE || '';
+let portNew = null;
+const vnum = v => String(v || '0').replace(/^v/, '').split('.').map(Number).reduce((a, n) => a * 1000 + (n || 0), 0);
+async function checkPortable() {
+  const { net } = require('electron');
+  const r = await net.fetch('https://api.github.com/repos/darynla2198-lopez/Evisual/releases/latest', { headers: { 'User-Agent': 'Evisual', Accept: 'application/vnd.github+json' } });
+  if (!r.ok) throw new Error('GitHub ' + r.status);
+  const j = await r.json(), v = String(j.tag_name || '').replace(/^v/, '');
+  if (vnum(v) <= vnum(app.getVersion())) { sendUpdate({ type: 'none' }); return; }
+  const a = (j.assets || []).find(x => /Portable.*\.exe$/i.test(x.name));
+  const link = a ? a.browser_download_url : j.html_url;
+  let canWrite = !!PORT_FILE;
+  try { fs.accessSync(path.dirname(PORT_FILE), fs.constants.W_OK); fs.accessSync(PORT_FILE, fs.constants.W_OK); } catch (e) { canWrite = false; }
+  if (!a || !canWrite) { sendUpdate(lastUpdate = { type: 'portable', version: v, url: link }); return; }
+  sendUpdate({ type: 'available', version: v });
+  try {
+    const d = await net.fetch(a.browser_download_url, { headers: { 'User-Agent': 'Evisual' } });
+    if (!d.ok) throw new Error('descarga ' + d.status);
+    const buf = Buffer.from(await d.arrayBuffer());
+    if (a.size && buf.length !== a.size) throw new Error('descarga incompleta');
+    if (a.digest && /^sha256:/.test(a.digest)) {
+      const h = require('crypto').createHash('sha256').update(buf).digest('hex');
+      if ('sha256:' + h !== a.digest) throw new Error('el archivo descargado no coincide');
+    }
+    const out = path.join(app.getPath('temp'), 'Evisual-Portable-' + v + '.exe');
+    fs.writeFileSync(out, buf);
+    portNew = { file: out, version: v };
+    sendUpdate(lastUpdate = { type: 'downloaded', version: v });
+  } catch (e) { sendUpdate(lastUpdate = { type: 'portable', version: v, url: link }); }
+}
+function applyPortable(relaunch) {
+  if (!portNew || !PORT_FILE) return false;
+  const bat = path.join(app.getPath('temp'), 'evisual-actualizar.cmd');
+  fs.writeFileSync(bat, [
+    '@echo off', 'set n=0', ':loop',
+    `move /y "${portNew.file}" "${PORT_FILE}" >nul 2>&1 && goto ok`,
+    'set /a n+=1', 'if %n% geq 90 goto end', 'ping -n 2 127.0.0.1 >nul', 'goto loop',
+    ':ok', relaunch ? `start "" "${PORT_FILE}"` : 'rem', ':end', '(goto) 2>nul & del "%~f0"'
+  ].join('\r\n'));
+  require('child_process').spawn('cmd.exe', ['/c', bat], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+  portNew = null;
+  return true;
+}
+app.on('will-quit', () => { if (PORTABLE) applyPortable(false); });
 async function checkNow() {
   if (!app.isPackaged) { sendUpdate({ type: 'none' }); return false; }
+  if (PORTABLE) {
+    try { await checkPortable(); return true; }
+    catch (e) { sendUpdate({ type: 'error', message: e.message }); return false; }
+  }
   if (lastUpdate && lastUpdate.type === 'downloaded') { sendUpdate(lastUpdate); return true; }
   if (checking) return true;
   checking = true;
@@ -118,4 +170,7 @@ ipcMain.on('ready', () => {
   setTimeout(() => { if (autoCheck) checkNow(); }, 8000);
 });
 setInterval(() => { if (autoCheck) checkNow(); }, 3 * 60 * 60 * 1000);
-ipcMain.on('install-update', () => { setImmediate(() => autoUpdater.quitAndInstall(true, true)); });
+ipcMain.on('install-update', () => {
+  if (PORTABLE) { if (applyPortable(true)) app.exit(0); return; }
+  setImmediate(() => autoUpdater.quitAndInstall(true, true));
+});
