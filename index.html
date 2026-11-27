@@ -174,6 +174,16 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);margin:0;fle
 .pop button[data-v]{display:block}
 [hidden]{display:none!important}
 #prOut{display:none}
+.gd{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;min-height:380px}
+.gd nav{display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line);padding-right:12px;max-height:60vh;overflow:auto}
+.gd nav button{display:flex;align-items:center;gap:10px;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;font:500 14px Inter,sans-serif;color:var(--ink);cursor:pointer}
+.gd nav button svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.gd nav button:hover{background:var(--chrome)}.gd nav button.on{background:var(--accs);color:var(--acc);font-weight:600}
+.gd article h3{font:700 20px/1.25 "Inter Tight",Inter,sans-serif;margin:2px 0 6px}.gd article>p{color:var(--mute);margin:0 0 14px}
+.gd ol{margin:0 0 14px;padding-left:22px}.gd ol li{margin:0 0 8px}.gd .tip{margin:0 0 14px}
+.gd kbd{font:600 12px Inter,sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
+.hsam button{background:none;border:0;color:var(--acc);font:600 13px Inter,sans-serif;cursor:pointer;padding:2px 4px}
+@media(max-width:700px){.gd{grid-template-columns:1fr}.gd nav{flex-direction:row;flex-wrap:wrap;border-right:0;padding:0}}
 .home{display:none;position:fixed;left:0;right:0;top:104px;bottom:0;z-index:15;background:var(--desk);align-items:center;justify-content:center;padding:24px;overflow:auto}
 body.empty .home{display:flex}
 body.empty #save,body.empty #print,body.empty #share,body.empty #undo{opacity:.4;pointer-events:none}
@@ -308,6 +318,7 @@ body[data-tool=view] .panel{display:none}
   <button class="ib" id="print" title="Imprimir"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-8h16v8h-3"/><path d="M7 14h10v7H7z"/></svg><span class="t">Imprimir</span></button>
   <button class="ib" id="share" title="Compartir"><svg class="i" viewBox="0 0 24 24"><path d="M16 7l-4-4-4 4M12 3v13M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7"/></svg><span class="t">Compartir</span></button>
   <button class="ib" id="theme" title="Apariencia: claro, oscuro o sistema"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 000 16z" fill="currentColor"/></svg><span class="t">Tema</span></button>
+  <button class="ib" id="help" title="Guía rápida (F1)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2.2M12 17h.01"/></svg><span class="t">Ayuda</span></button>
   <button class="ib" id="news" title="Novedades y actualizaciones"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7z"/></svg><span class="t">Novedades</span><i class="dot" id="nDot" hidden></i></button>
 </header>
 <nav class="tabs" id="tabs" role="tablist" aria-label="Documentos abiertos"></nav>
@@ -330,7 +341,7 @@ body[data-tool=view] .panel{display:none}
       <div class="viewer" id="viewer"></div>
       <section class="pane2" id="pane2" aria-label="Segundo documento">
         <div class="p2bar"><b id="b2n">Segundo documento</b>
-          <select id="b2s" aria-label="Elegir documento"><option value="">Cambiar…</option><option value="same">Copia del documento actual</option><option value="plan">Plano de ejemplo</option><option value="doc">Contrato de ejemplo</option></select>
+          <select id="b2s" aria-label="Elegir documento"><option value="">Cambiar…</option><option value="same">Copia del documento actual</option></select>
           <label class="ib" for="f2" tabindex="0" title="Abrir otro PDF aquí"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></label><input type="file" id="f2" accept="application/pdf,.pdf" hidden>
           <button class="ib" id="z2o" title="Alejar"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><button class="ib" id="z2i" title="Acercar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
           <button class="ib" id="b2v" title="Guardar este documento"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg></button>
@@ -374,6 +385,11 @@ body[data-tool=view] .panel{display:none}
   <p class="note" id="shNote">Compartir abre el panel de Windows con tus apps: correo, WhatsApp, Teams, OneDrive y equipos cercanos.</p>
 </div></div>
 
+<div class="modal" id="mHelp" role="dialog" aria-modal="true" aria-labelledby="gT"><div class="box wide">
+  <div class="bh"><h2 id="gT">Guía rápida de Evisual</h2><button class="x" data-close>✕</button></div>
+  <div class="gd"><nav id="gNav" aria-label="Temas"></nav><article id="gBody" aria-live="polite"></article></div>
+</div></div>
+
 <div class="modal" id="mPw" role="dialog" aria-modal="true" aria-labelledby="pwT"><div class="box">
   <div class="bh"><h2 id="pwT">Documento protegido</h2><button class="x" data-close>✕</button></div>
   <p class="lead"><b id="pwN"></b> pide contraseña para abrirse.</p>
@@ -400,7 +416,7 @@ body[data-tool=view] .panel{display:none}
   <p>Abre un PDF para empezar a editar, firmar, foliar o imprimir.</p>
   <div class="hdrop"><label class="btn pri" for="fOpen" tabindex="0">Abrir PDF</label><small>o arrastra uno o varios archivos a esta ventana</small></div>
   <div class="hkeys"><span><kbd>Ctrl</kbd><kbd>O</kbd>Abrir</span><span><kbd>Ctrl</kbd><kbd>S</kbd>Guardar</span><span><kbd>Ctrl</kbd><kbd>P</kbd>Imprimir</span></div>
-  <div class="hsam">¿Quieres probar primero? <button id="hPlan">Abrir un plano de ejemplo</button>·<button id="hDoc">un contrato de ejemplo</button></div>
+  <div class="hsam">¿Primera vez en Evisual? <button id="hGuide">Ver la guía rápida</button></div>
 </div></div>
 <div class="busy" id="busy"></div>
 <div id="prOut" aria-hidden="true"></div>
@@ -542,7 +558,7 @@ const TABS=[];let act=-1;
 function snap(){const t=TABS[act];if(!t||!S.bytes)return;Object.assign(t,{handle:S.handle,dirty:S.dirty,bytes:S.bytes,name:S.name,hist:S.hist,tags:S.tags,srcs:S.srcs,merged:S.merged,zoom:S.zoom,fit:S.fit,st:viewer.scrollTop,cur:S.cur})}
 function drawTabs(){const b=$('#tabs');if(!b)return;b.innerHTML=TABS.map((t,i)=>{const on=i===act,nm=on?S.name:t.name,mod=on?S.dirty:t.dirty;return`<div class="tab${on?' on':''}" role="tab" aria-selected="${on}" tabindex="0" data-i="${i}" title="${esc(nm)}">${ico(TOOLS[0][2])}<span>${esc(nm)}</span>${mod?'<i class="m" title="Tiene cambios"></i>':''}${TABS.length?`<button class="tx" data-x="${i}" title="Cerrar pestaña" aria-label="Cerrar ${esc(nm)}">✕</button>`:''}</div>`}).join('')+'<label class="tadd" for="fOpen" tabindex="0" title="Abrir otro PDF en una pestaña nueva">+</label>';
  $('.tab.on',b)?.scrollIntoView({block:'nearest',inline:'nearest'});
- $('#b2s').innerHTML='<option value="">Cambiar…</option>'+TABS.map((t,i)=>i===act?'':`<option value="tab:${i}">Pestaña: ${esc(t.name)}</option>`).join('')+'<option value="same">Copia del documento actual</option><option value="plan">Plano de ejemplo</option><option value="doc">Contrato de ejemplo</option>'}
+ $('#b2s').innerHTML='<option value="">Cambiar…</option>'+TABS.map((t,i)=>i===act?'':`<option value="tab:${i}">Pestaña: ${esc(t.name)}</option>`).join('')+'<option value="same">Copia del documento actual</option>'}
 function goHome(){if(S.doc){S.doc.destroy();S.doc=null}Object.assign(S,{bytes:null,name:'',hist:[],dirty:false,handle:null,tags:[],srcs:[],merged:[]});S.sel.clear();viewer.innerHTML='';thumbs.innerHTML='';panel.innerHTML='';document.body.classList.add('empty');$('#dName').textContent='Evisual';$('#dMeta').textContent='Ningún documento abierto';$('#undo').disabled=true;drawTabs()}
 async function switchTab(i){if(busy||i===act||!TABS[i])return;snap();act=i;const t=TABS[i];Object.assign(S,{handle:t.handle,dirty:t.dirty,hist:t.hist,merged:t.merged,zoom:t.zoom,fit:t.fit,cur:t.cur||1,bytes:null,tags:[]});await load(t.bytes,t.name,false,false,t.tags,t.srcs);viewer.scrollTop=t.st||0;drawTabs()}
 async function closeTab(i,ok){if(!TABS[i])return;const t=TABS[i],nm=i===act?S.name:t.name;if(!ok&&(i===act?S.dirty:t.dirty)){confirmClose(i,nm);return}if(TABS.length===1){TABS.length=0;act=-1;goHome()}else if(i===act){TABS.splice(i,1);act=-1;await switchTab(Math.min(i,TABS.length-1))}else{TABS.splice(i,1);if(i<act)act--;drawTabs()}toast('Pestaña cerrada: '+nm)}
@@ -671,11 +687,11 @@ async function lay2(){if(!B.doc)return;const p1=(await B.doc.getPage(1)).getView
  const frag=document.createDocumentFragment();for(let n=1;n<=B.doc.numPages;n++){const p=await B.doc.getPage(n),vp=p.getViewport({scale:B.zoom*96/72}),el=document.createElement('div');el.className='pg';el.style.width=vp.width+'px';el.style.height=vp.height+'px';el.innerHTML='<canvas></canvas>';el._p=p;frag.appendChild(el)}
  v2.innerHTML='';v2.appendChild(frag);$$('.pg',v2).forEach(el=>io2.observe(el))}
 async function open2(file){if(!file)return;const b=await readPdf(file);if(!b)return;try{await load2(b,file.name);setSplit(true)}catch(e){toast('No se pudo abrir el PDF: '+e.message)}}
-async function setSplit(on){$('#panes').classList.toggle('split',on);$('#split').classList.toggle('on',on);if(on&&!B.doc){if(/planos/i.test(S.name))await load2(await sampleDoc(),'Contrato de supervisión.pdf');else await load2(await sample(),'Vivienda Los Robles - planos.pdf')}else if(on){B.fit=true;lay2()}}
+async function setSplit(on){$('#panes').classList.toggle('split',on);$('#split').classList.toggle('on',on);if(on&&!B.doc){const o=TABS.findIndex((t,i)=>i!==act);if(o>=0)await load2(TABS[o].bytes,TABS[o].name);else await load2(S.bytes,S.name)}else if(on){B.fit=true;lay2()}}
 $('#split').onclick=()=>setSplit(!$('#panes').classList.contains('split'));
 $('#b2x').onclick=()=>setSplit(false);
 $('#f2').onchange=e=>{open2(e.target.files[0]);e.target.value=''};
-$('#b2s').onchange=async e=>{const v=e.target.value;e.target.value='';if(v.startsWith('tab:')){const i=+v.slice(4),t=TABS[i];if(t)await load2(t.bytes,t.name);return}if(v==='same')await load2(S.bytes,S.name);if(v==='plan')await load2(await sample(),'Vivienda Los Robles - planos.pdf');if(v==='doc')await load2(await sampleDoc(),'Contrato de supervisión.pdf')};
+$('#b2s').onchange=async e=>{const v=e.target.value;e.target.value='';if(v.startsWith('tab:')){const i=+v.slice(4),t=TABS[i];if(t)await load2(t.bytes,t.name);return}if(v==='same')await load2(S.bytes,S.name);};
 $('#z2i').onclick=()=>{B.fit=false;B.zoom*=1.2;lay2()};$('#z2o').onclick=()=>{B.fit=false;B.zoom/=1.2;lay2()};
 let rs2;new ResizeObserver(()=>{clearTimeout(rs2);rs2=setTimeout(()=>{if(B.fit&&B.doc&&$('#panes').classList.contains('split'))lay2()},200)}).observe(v2);
 
@@ -805,17 +821,56 @@ const hexRgb=h=>{const n=parseInt(h.slice(1),16);return L.rgb((n>>16&255)/255,(n
 async function drawTextBlock(d,pg,x,y){const {f,sk}=await famFont(d,TXT.fam,TXT.b,TXT.i),SK=sk?{ySkew:L.degrees(sk)}:{},z=TXT.size,C=hexRgb(TXT.col),op=TXT.op/100,lines=TXT.text.split('\n'),lh=z*TXT.lh,ws=lines.map(l=>f.widthOfTextAtSize(l,z)),mw=Math.max(...ws),off=w=>TXT.al==='c'?-w/2:TXT.al==='r'?-w:0,top=y+z*.65;
  if(TXT.hl||TXT.wb){const pad=z*.25,bx=x+off(mw)-pad,bh=lh*(lines.length-1)+z*1.3+pad*2;pg.drawRectangle({x:bx,y:top-bh+pad,width:mw+pad*2,height:bh,color:TXT.hl?L.rgb(1,.84,0):L.rgb(1,1,1),opacity:TXT.hl?.55:1})}
  lines.forEach((l,i)=>{const bx=x+off(ws[i]),by=y-z*.35-i*lh;if(l)pg.drawText(l,{x:bx,y:by,size:z,font:f,color:C,opacity:op,...SK});const t=Math.max(.5,z/16);if(TXT.u&&l)pg.drawLine({start:{x:bx,y:by-z*.13},end:{x:bx+ws[i],y:by-z*.13},thickness:t,color:C,opacity:op});if(TXT.st&&l)pg.drawLine({start:{x:bx,y:by+z*.3},end:{x:bx+ws[i],y:by+z*.3},thickness:t,color:C,opacity:op})})}
-$('#hPlan').onclick=()=>loadSample('plan');$('#hDoc').onclick=()=>loadSample('doc');
+$('#hGuide').onclick=()=>openGuide();
+const GUIDE=[
+ ['start','Primeros pasos','M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z','Abrir, guardar y moverte por tus documentos.',
+  ['Pulsa <b>Abrir</b> o arrastra uno o varios PDF a la ventana. Cada uno se abre en su propia pestaña.','Usa la barra izquierda para elegir la herramienta; el panel de la derecha muestra sus opciones.','El botón de miniaturas (arriba a la izquierda del documento) muestra u oculta las páginas.','<b>Deshacer</b> revierte el último cambio. <b>Guardar</b> escribe sobre el mismo archivo; Mayús + clic guarda una copia nueva.','<b>Dividir</b> muestra dos documentos lado a lado para compararlos.'],
+  'Tus documentos nunca salen de tu equipo: todo se procesa en local.'],
+ ['text','Editar texto','M5 6V4h14v2M12 4v16M9 20h6','Corrige texto existente o agrega texto nuevo.',
+  ['Elige <b>Editar</b> y, en el panel, <b>Editar existente</b>.','Antes de tocar la hoja, elige letra, tamaño, color y estilo (negrita, cursiva, subrayado, centrado).','Haz clic en la línea que quieres cambiar, escribe y pulsa <kbd>Enter</kbd>. <kbd>Esc</kbd> cancela.','Para texto nuevo, cambia a <b>Agregar texto</b>, escríbelo en el panel y haz clic donde quieras colocarlo.'],
+  'El texto original se elimina del PDF; no queda recuadro ni fondo blanco.'],
+ ['pages','Organizar páginas','M9 3h11v14H9zM5 7v14h11','Ordena, gira, duplica, inserta o extrae páginas.',
+  ['Elige <b>Páginas</b>: verás todas las hojas en cuadrícula.','Arrastra una página para cambiarla de lugar. Haz clic para seleccionar varias.','Usa los botones del panel para girar, duplicar, eliminar, insertar una hoja en blanco u otro PDF, o extraer la selección.','Con <b>Unir</b> combinas varios PDF; cada documento se marca con un color para distinguirlo.','<b>Recortar</b> ajusta los márgenes de una o varias páginas.'],''],
+ ['folio','Foliar','M5 9h14M4 15h14M10 3L8 21M16 3l-2 18','Numera las hojas como en un expediente.',
+  ['Elige <b>Foliar</b> y el modo <b>Automático</b>.','Indica desde qué página empezar y el rango: <b>del folio</b> y <b>al folio</b>. Si dejas vacío el final, se folia hasta la última hoja.','Marca <b>de atrás hacia adelante</b> si la última página debe llevar el primer folio.','Elige formato (por ejemplo 045 o “cuarenta y cinco”), posición, letra especial (numerador, máquina de escribir, esténcil o sello), estilo y color.','En modo <b>Manual</b> eliges el número y haces clic en el punto exacto de la hoja.'],
+  'La vista previa muestra cómo quedará el folio antes de aplicarlo.'],
+ ['sign','Firmas y sellos','M3 18c3-1 4-9 6.5-9S9 16 11 16s3-4 4.5-4 1 3 3 3H21M3 21.5h18','Firma documentos y aplica sellos de revisión.',
+  ['En <b>Firmar</b>, dibuja tu firma, escríbela o carga una imagen escaneada (el fondo se vuelve transparente).','Haz clic en la hoja para colocarla. Puedes ponerla en varias páginas.','En <b>Sellos</b> eliges Aprobado, Revisado y otros, con fecha y responsable, o cargas tu propio sello.'],''],
+ ['header','Encabezado y marca de agua','M4 3h16v18H4zM4 7.5h16M4 16.5h16','Textos repetidos en todas las hojas.',
+  ['En <b>Encabezado</b> escribe el texto izquierdo, central o derecho del encabezado y del pie.','Usa {n} para el número de página, {N} para el total, {fecha} y {archivo}.','En <b>Marca de agua</b> elige texto o imagen, orientación, opacidad y páginas.'],''],
+ ['comment','Comentar y resaltar','M4 5h16v11H9l-5 4zM8 9h8M8 12h5','Notas y resaltados que se ven en cualquier lector de PDF.',
+  ['Elige <b>Comentar</b>, luego <b>Nota</b> o <b>Resaltar</b>.','Para una nota, haz clic en la hoja y escribe. Para resaltar, arrastra sobre el área.','La lista del panel te deja ir a cada comentario o borrarlo.'],''],
+ ['measure','Medir planos','M3 17L17 3l4 4L7 21zM7.5 12.5l2 2M10.5 9.5l2 2M13.5 6.5l2 2','Distancias y áreas a escala.',
+  ['Elige <b>Medir</b> y la escala del plano (por ejemplo 1:50).','<b>Distancia</b>: haz clic en dos puntos. <b>Área</b>: recorre el contorno y vuelve al primer punto.','Si no conoces la escala, usa <b>Calibrar con una cota conocida</b>.'],''],
+ ['protect','Proteger','M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM9.5 12l2 2 3.5-4','Contraseñas, permisos e información confidencial.',
+  ['En <b>Proteger</b> escribe una contraseña para abrir y elige qué se permite: imprimir, copiar, editar o comentar.','<b>Ocultar información confidencial</b> borra de forma definitiva los datos sensibles: dibuja el área y aplica.','También puedes quitar los metadatos ocultos del archivo (autor, programa y fechas).'],
+  'Guarda una copia sin contraseña para ti: si la olvidas, no hay forma de recuperarla.'],
+ ['layers','Capas','M12 3l9 5-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5','Planos con capas (CAD).',
+  ['En <b>Capas</b> enciende o apaga cada capa del plano.','<b>Consolidar capas</b> en modo <b>Sin pérdida</b> fija las capas visibles y elimina las ocultas, manteniendo la calidad vectorial.','<b>Rasterizar</b> convierte las hojas en imagen a la resolución que elijas.'],''],
+ ['print','Imprimir y compartir','M7 9V3h10v6M7 17H4v-8h16v8h-3M7 14h10v7H7z','Cualquier papel, del A4 al rollo de plotter.',
+  ['En <b>Imprimir</b> elige el papel (ISO, carta, ARCH, ANSI, rollos o personalizado), orientación, escala, color y calidad.','Al continuar se abre el cuadro de Windows para elegir la impresora.','<b>Compartir</b> abre el panel de Windows (correo, WhatsApp, Teams, OneDrive) o guarda una copia; puedes enviar una versión liviana.'],''],
+ ['keys','Atajos de teclado','M4 6h16v12H4zM7 10h.01M11 10h.01M15 10h.01M7 14h10','Trabaja más rápido.',
+  ['<kbd>Ctrl</kbd> <kbd>O</kbd> abrir · <kbd>Ctrl</kbd> <kbd>S</kbd> guardar · <kbd>Ctrl</kbd> <kbd>Mayús</kbd> <kbd>S</kbd> guardar como','<kbd>Ctrl</kbd> <kbd>P</kbd> imprimir · <kbd>Ctrl</kbd> <kbd>Z</kbd> deshacer','<kbd>Esc</kbd> cancela la acción en curso o cierra una ventana','<kbd>F1</kbd> abre esta guía'],'']];
+let gCur='start';
+function openGuide(k){gCur=k||gCur;const G=GUIDE.find(g=>g[0]===gCur)||GUIDE[0];
+ $('#gNav').innerHTML=GUIDE.map(g=>`<button data-k="${g[0]}" class="${g[0]===G[0]?'on':''}">${ico(g[2])}${g[1]}</button>`).join('');
+ const tool=TOOLS.some(t=>t[0]===G[0])&&S.doc;
+ $('#gBody').innerHTML=`<h3>${G[1]}</h3><p>${G[3]}</p><ol>${G[4].map(x=>`<li>${x}</li>`).join('')}</ol>${G[5]?`<div class="tip">${G[5]}</div>`:''}${tool?`<button class="btn pri" id="gGo">Ir a ${TOOLS.find(t=>t[0]===G[0])[1]}</button>`:G[0]==='start'&&!S.doc?'<label class="btn pri" for="fOpen">Abrir un PDF</label>':''}`;
+ $('#gBody label')&&($('#gBody label').onclick=()=>$('#mHelp').classList.remove('on'));$('#gGo')&&($('#gGo').onclick=()=>{$('#mHelp').classList.remove('on');setTool(G[0])});
+ if(!$('#mHelp').classList.contains('on'))openM('mHelp')}
+$('#gNav').onclick=e=>{const b=e.target.closest('button');if(b)openGuide(b.dataset.k)};
+$('#help').onclick=()=>openGuide(S.doc&&GUIDE.some(g=>g[0]===S.tool)?S.tool:'start');
+addEventListener('keydown',e=>{if(e.key==='F1'){e.preventDefault();$('#help').click()}});
 const loadSample=async k=>{await fresh(k==='doc'?await sampleDoc():await sample(),k==='doc'?'Contrato de supervisión.pdf':'Vivienda Los Robles - planos.pdf');toast(k==='doc'?'Contrato de ejemplo abierto':'Plano de ejemplo abierto')};
 const PANELS={
-view:{h:()=>{const g=S.ocg?.getGroups?.(),nl=g?Object.keys(g).length:0;return`<h2>Documento</h2><p class="lead">Abre tu propio PDF, o prueba con un plano o un contrato de ejemplo. Todo se procesa en tu equipo, nada se sube a internet.</p>
+view:{h:()=>{const g=S.ocg?.getGroups?.(),nl=g?Object.keys(g).length:0;return`<h2>Documento</h2><p class="lead">Todo se procesa en tu equipo; ningún documento se sube a internet.</p>
  <dl class="kv"><dt>Archivo</dt><dd>${esc(S.name)}</dd><dt>Páginas</dt><dd>${S.doc.numPages}</dd><dt>Peso</dt><dd>${fmt(S.bytes.length)}</dd><dt>Formato</dt><dd>${paperName(S.info.w,S.info.h)}</dd><dt>Capas</dt><dd>${nl||'Ninguna'}</dd></dl>
- <label class="btn pri full" for="fOpen">Abrir PDF</label><div class="g2"><button class="btn" id="vS">Plano de ejemplo</button><button class="btn" id="vD">Contrato de ejemplo</button></div><p class="note" style="margin:0 0 20px">También puedes arrastrar un PDF a la ventana.</p>
+ <label class="btn pri full" for="fOpen">Abrir PDF</label><button class="btn full" id="vG">Ver la guía rápida</button><p class="note" style="margin:0 0 20px">También puedes arrastrar un PDF a la ventana.</p>
  <h3>¿Qué quieres hacer?</h3><div class="tools">${TOOLS.slice(1).map(t=>`<button data-t="${t[0]}">${ico(t[2])}${t[1]}<small>${t[3]}</small></button>`).join('')}</div>`},
- b:()=>{$('#vS').onclick=()=>loadSample('plan');$('#vD').onclick=()=>loadSample('doc');$('.tools',panel).onclick=e=>{const b=e.target.closest('button');b&&setTool(b.dataset.t)}}},
+ b:()=>{$('#vG').onclick=()=>openGuide();$('.tools',panel).onclick=e=>{const b=e.target.closest('button');b&&setTool(b.dataset.t)}}},
 text:{h:()=>{const add=TXT.mode==='add',AL=[['l','M4 6h16M4 10h10M4 14h16M4 18h10','Izquierda'],['c','M4 6h16M7 10h10M4 14h16M7 18h10','Centrado'],['r','M4 6h16M10 10h10M4 14h16M10 18h10','Derecha']],al=add?TXT.al:TXT.ea;return`<h2>Texto</h2>${seg('tM',[['edit','Editar existente'],['add','Agregar texto']],TXT.mode)}
  <div id="tE" ${add?'hidden':''}><p class="lead">Elige abajo la letra y el estilo, toca una línea de texto en la hoja, escribe el cambio y pulsa Enter.</p><div class="tip">El texto original se elimina del PDF, sin dejar recuadro ni fondo. Esc cancela; si borras todo, la línea desaparece.</div>
-  ${/planos/i.test(S.name)?'<button class="btn full" id="tDoc">Probar con el contrato de ejemplo</button>':''}</div>
+  </div>
  <div id="tA" ${add?'':'hidden'}><p class="lead">Escribe tu texto, dale estilo y haz clic en la hoja donde quieras ponerlo.</p>
  <label class="f"><span>Texto (Enter para otra línea)</span><textarea id="tT" maxlength="400">${esc(TXT.text)}</textarea></label></div>
  <h3>Letra</h3><div class="g2" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)"><label class="f"><span>Tipo de letra</span><select id="tF">${FAMS.map(f=>`<option value="${f[0]}" ${f[0]===TXT.fam?'selected':''} style="font-family:${f[2].replace(/"/g,"'")}">${f[1]}</option>`).join('')}</select></label>
@@ -834,15 +889,14 @@ text:{h:()=>{const add=TXT.mode==='add',AL=[['l','M4 6h16M4 10h10M4 14h16M4 18h1
   $('#tT').oninput=e=>{TXT.text=e.target.value;up()};$('#tS').onchange=e=>{if(TXT.mode==='add')TXT.size=+e.target.value;else TXT.esz=+e.target.value;up()};$('#tF').onchange=e=>{TXT.fam=e.target.value;up()};$('#tLh')&&($('#tLh').onchange=e=>{TXT.lh=+e.target.value;up()});$('#tO').oninput=e=>{TXT.op=+e.target.value;$('#tOv').textContent=TXT.op+'%';up()};
   const setC=c=>{TXT.col=c;$$('#tC button').forEach(b=>b.classList.toggle('on',b.dataset.c===c));$('#tCc').value=c;up()};$('#tC').onclick=e=>{const b=e.target.closest('button');b&&setC(b.dataset.c)};$('#tCc').oninput=e=>setC(e.target.value);
   onSeg('tAl',v=>{if(TXT.mode==='add')TXT.al=v;else TXT.ea=v;up()});$('#tG').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;TXT[k]=!TXT[k];if(k==='hl'&&TXT.hl)TXT.wb=false;if(k==='wb'&&TXT.wb)TXT.hl=false;$$('#tG button').forEach(x=>x.classList.toggle('on',!!TXT[x.dataset.k]));up()};
-  onSeg('tM',v=>{TXT.mode=v;S.place=null;showPanel();viewer.classList.toggle('cross',v==='add');refreshTL()});$('#tDoc')&&($('#tDoc').onclick=()=>loadSample('doc'));viewer.classList.toggle('cross',TXT.mode==='add');up()}},
+  onSeg('tM',v=>{TXT.mode=v;S.place=null;showPanel();viewer.classList.toggle('cross',v==='add');refreshTL()});viewer.classList.toggle('cross',TXT.mode==='add');up()}},
 merge:{h:()=>`<h2>Combinar PDFs</h2><p class="lead">Agrega PDFs al final del documento. Cada archivo toma un color para que distingas sus páginas.</p>
  <label class="btn pri full" for="mF">Elegir PDFs para unir</label><input type="file" id="mF" accept="application/pdf,.pdf" multiple hidden>
- <div class="g2"><button class="btn" id="mC">Unir el contrato de ejemplo</button><button class="btn" id="mP">Unir el plano de ejemplo</button></div>
  <h3>Documentos en este archivo</h3><div class="rows legend">${S.srcs.map((s,k)=>{const c=S.tags.filter(t=>t===k).length;return c?`<div class="row"><i style="background:${s.c}"></i><span>${esc(s.n)}</span><b>${c} pág.</b></div>`:''}).join('')}</div>
  <p class="note">Para mover páginas entre documentos, usa Páginas y arrástralas. Usa Deshacer si te equivocas.</p>`,
  b:()=>{const add=async list=>{await modify(async(d,cx)=>{for(const x of list){const src=await L.PDFDocument.load(x.b,{ignoreEncryption:true}),pp=await d.copyPages(src,src.getPageIndices()),k=cx.srcs.length;cx.srcs.push({n:x.n,c:SRC[k%SRC.length]});pp.forEach(p=>{d.addPage(p);cx.tags.push(k)})}},list.length>1?`Se unieron ${list.length} archivos`:`Se unió ${list[0].n}`)};
   $('#mF').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if(!fs.length)return;add(await Promise.all(fs.map(async f=>({n:f.name,b:new Uint8Array(await f.arrayBuffer())}))))};
-  $('#mC').onclick=async()=>add([{n:'Contrato de supervisión.pdf',b:await sampleDoc()}]);$('#mP').onclick=async()=>add([{n:'Vivienda Los Robles - planos.pdf',b:await sample()}])}},
+  }},
 pages:{h:()=>`<h2>Organizar páginas</h2><p class="lead">Arrastra las páginas para cambiar su orden. Toca una para seleccionarla; los botones de cada página duplican, giran o eliminan.</p>
  <label class="f"><span>Selección</span><input id="pgR" placeholder="Ejemplo: 1-2, 4" inputmode="numeric"></label>
  <div class="g2"><button class="btn" id="pgA">Todas</button><button class="btn" id="pgN">Ninguna</button></div><p class="note" id="pgC" style="margin:0 0 14px"></p>
@@ -1010,7 +1064,7 @@ function measPanel(){const b=$('#mBox');if(!b)return;const ms=S.meas,last=ms.at(
  h+=`<div class="res"><span class="note" style="margin:0">${last?'Última medida':'Sin medidas todavía'}</span><div class="big">${last?esc(mtxt(last)):'0.00 m'}</div>${last&&last.type==='a'?`<span class="note">Perímetro ${toM(plen(last.pts,true)).toFixed(2)} m</span>`:''}</div>`;
  if(ms.length)h+=`<div class="rows">${ms.map((m,i)=>`<div class="row"><span>${m.type==='d'?'Distancia':'Área'} ${i+1}<small>Página ${m.n}</small></span><b>${esc(mtxt(m))}</b><button class="x" data-i="${i}" title="Quitar">✕</button></div>`).join('')}</div>
   <dl class="kv" style="border-top:0;padding-top:0">${dist.length?`<dt>Suma de distancias</dt><dd>${dist.reduce((a,m)=>a+mval(m),0).toFixed(2)} m</dd>`:''}${ar.length?`<dt>Suma de áreas</dt><dd>${ar.reduce((a,m)=>a+mval(m),0).toFixed(2)} m²</dd>`:''}</dl><button class="btn full" id="mClr">Borrar todas</button>`;
- h+=`<p class="note">Prueba: el muro inferior del plano de ejemplo mide 12.00 m a escala 1:50, y la sala 56.00 m².</p>`;b.innerHTML=h;
+ h+=`<p class="note">Consejo: si no conoces la escala, calibra con una cota conocida del plano.</p>`;b.innerHTML=h;
  setHint(S.calib?'Dibuja la cota conocida':S.mmode==='d'?'Clic en dos puntos para medir':'Clic en cada esquina; toca el primer punto para cerrar');
  $('#cGo')&&($('#cGo').onclick=()=>{S.calib=true;S.mmode='d';$$('#mM button').forEach(x=>x.classList.toggle('on',x.dataset.v==='d'));measPanel()});
  $('#cOk')&&($('#cOk').onclick=()=>{const r=parseFloat($('#cV').value);if(!(r>0)){toast('Escribe la medida real en metros.');return}const n=S.calibM.n;S.scale=Math.round(r*1000/(plen(S.calibM.pts)*25.4/72)*10)/10;S.meas.push(S.calibM);S.calibM=null;showPanel();for(let k=1;k<=S.doc.numPages;k++)drawOv(k);toast(`Escala calibrada: 1:${S.scale}`)});
@@ -1195,8 +1249,8 @@ const openM=id=>{$('#'+id).classList.add('on');$('#'+id+' [data-close]').focus()
 $$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on')}));
 const NAT=window.evisualNative||null;
 const natHandle=(path,name)=>({name,nativePath:path,createWritable:async()=>{let blob;return{write:async b=>{blob=b},close:async()=>NAT.writeFile(path,new Uint8Array(await blob.arrayBuffer()))}}});
-const APP_V=(NAT&&NAT.version)||'1.0.2',UPURL='version.json';
-const NOTES=[{v:'1.0.2',d:'2026-11-27',n:['Editar texto ya no deja fondo blanco: el texto original se elimina del PDF', 'Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado', 'Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display', 'Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante', 'Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello']},{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
+const APP_V=(NAT&&NAT.version)||'1.0.3',UPURL='version.json';
+const NOTES=[{v:'1.0.3',d:'2026-11-27',n:['Guía rápida integrada: botón Ayuda y tecla F1, con pasos para cada herramienta', 'Se quitaron los documentos de ejemplo de la app', 'La vista dividida abre otra pestaña o una copia del documento actual']},{v:'1.0.2',d:'2026-11-27',n:['Editar texto ya no deja fondo blanco: el texto original se elimina del PDF', 'Al editar: negrita, cursiva, subrayado, tachado, resaltado, tamaño y centrado', 'Más de 20 tipos de letra, incluidas Roboto, Open Sans, Montserrat, Poppins, Merriweather y Playfair Display', 'Foliar por rango de numeración (del folio X al Y), desde cualquier página y de atrás hacia adelante', 'Folios con el número en letras y letras especiales: numerador, máquina de escribir, esténcil y sello']},{v:'1.0.1',d:'2026-11-27',n:['Evisual abre en una pantalla de inicio limpia, sin documento de ejemplo','Cerrar la última pestaña vuelve al inicio','Los ejemplos siguen disponibles desde el inicio']},{v:'1.0.0',d:'2026-11-27',n:['Pestañas para trabajar con varios documentos','Edición de texto existente y texto nuevo con fuentes, colores y alineación','Firmas y sellos dibujados, escritos o desde imagen','Organizar páginas: arrastrar, duplicar, rotar, insertar, extraer y recortar','Foliado automático o manual con diseño de fuente y estilo','Encabezado, pie de página y marcas de agua','Comentarios y resaltado','Protección con contraseña, permisos, censura y limpieza de metadatos','Consolidación de capas sin pérdida','Medición de distancias y áreas en planos','Impresión en cualquier formato: ISO A y B, carta, ARCH, ANSI y rollos de plotter','Vista dividida, tema claro u oscuro, funciona sin conexión']}];
 const UP={st:'idle',last:null,remote:null,reg:null};
 const tm=d=>d?d.toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'todavía no';
 const vnum=v=>String(v||'0').split('.').map(Number).reduce((a,x)=>a*1000+(x||0),0);

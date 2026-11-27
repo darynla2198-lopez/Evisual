@@ -1,7 +1,16 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "date": "2026-11-27",
   "notes": [
+    {
+      "v": "1.0.3",
+      "d": "2026-11-27",
+      "n": [
+        "Guía rápida integrada: botón Ayuda y tecla F1, con pasos para cada herramienta",
+        "Se quitaron los documentos de ejemplo de la app",
+        "La vista dividida abre otra pestaña o una copia del documento actual"
+      ]
+    },
     {
       "v": "1.0.2",
       "d": "2026-11-27",

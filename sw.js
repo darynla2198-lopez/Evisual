@@ -1,6 +1,6 @@
 /* Evisual service worker: funciona sin conexión y aplica actualizaciones al reiniciar.
    Para publicar una versión nueva: cambia VERSION aquí y "version" en version.json. */
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 const CACHE = 'evisual-' + VERSION;
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
